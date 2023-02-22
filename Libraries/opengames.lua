@@ -3,21 +3,28 @@ function draw()
   gamee = game.screen
   win:addChild(GUI.panel(1,1,game.window.width,game.window.heigth,game.window.color))
   if game.window.abn == true then
-    win:addChild(GUI.actionButtons(1,1,false))
+    local tmp = win:addChild(GUI.actionButtons(2,2,false))
+    tmp.close.onTouch = function() win:remove() end
+    tmp.maximize.onTouch = function() win.maximize() end
+    tmp.minimize.onTouch = function() win.minimize() end
   end
   for i = 1,#gamee do
     if gamee[i].visible == true then
       if gamee[i].type == 'text' then
-        win:addChild(GUI.text(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].color),gamee[i].text))
+        if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
+        win:addChild(GUI.text(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].color),text))
       end
       if gamee[i].type == 'panel' then
         win:addChild(GUI.panel(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[1].heigth),tonumber(gamee[i].color)))
       end
       if gamee[i].type == 'button' then
-        win:addChild(GUI.button(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorbgp),tonumber(gamee[i].colorfgp),gamee[i].text)).onTouch = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
+      if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
+        win:addChild(GUI.button(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorbgp),tonumber(gamee[i].colorfgp),text)).onTouch = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
       end
       if gamee[i].type == 'input' then
-        local tmp = win:addChild(GUI.input(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorph),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorfgp),gamee[i].text,gamee[i].textph))
+      if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
+      if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name..'ph'] else text = gamee[i].text end
+        local tmp = win:addChild(GUI.input(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorph),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorfgp),text,textph))
         tmp.onInputFinished = function() 
           game.screen[i].text = tmp.text
           system.execute(scriptpath..'/Scripts/'..game.screen[i].onInputEnded) 
@@ -43,7 +50,8 @@ function draw()
         end
       end
       if gamee[i].type == 'colorSelector' then
-        win:addChild(GUI.colorSelector(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color),gamee[i].text)).onColorSelected = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
+        if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
+        win:addChild(GUI.colorSelector(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color),text)).onColorSelected = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
       end
       if gamee[i].type == 'switch' then
         win:addChild(GUI.switch(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorpp),tonumber(gamee[i].state))).onStateChanged = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onStateChanged) end
@@ -51,7 +59,7 @@ function draw()
       if gamee[i].type == 'image' then
         idk = nil
         for e = 1,#game.storage do
-          if game.storage[e].type == 'imageStorage' and game.storage[e].name == gamee[i].image then
+          if game.storage[e].name == gamee[i].image then
             idk = game.storage[e].path
           end
         end
