@@ -46,7 +46,10 @@ function del() for i = 1,#game.screen do if what == game.screen[i] then table.re
 function drawparams(whatt)
   what = whatt
   params:removeChildren()
-  if not what then return end
+  if not what then 
+    params:addChild(GUI.panel(1,1,40,25,cr1))
+    return 
+  end
   params:addChild(GUI.panel(1,1,40,25,cr1))
   tt(1,1,0x505050,'Params')
   if what.type == 'text' then
@@ -310,18 +313,17 @@ function drawparams(whatt)
     tt(1,3,cr2,lc.name)
     tt(1,4,cr2,'X')
     tt(1,5,cr2,'Y')
-    tt(1,6,cr2,lc.path)
-    tt(1,7,cr2,lc.image)
-    tt(1,8,cr2,lc.visible)
-    tt(1,9,cr2,lc.delete)
-    tt(1,10,cr2,lc.up)
-    tt(1,11,cr2,lc.down)
-    local tmp = it(15, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.image, "I")
+    tt(1,6,cr2,lc.image)
+    tt(1,7,cr2,lc.visible)
+    tt(1,8,cr2,lc.delete)
+    tt(1,9,cr2,lc.up)
+    tt(1,10,cr2,lc.down)
+    local tmp = it(15, 6, 20,1, cr1, cr2, cr3, cr1, cr2, what.image, "I")
     tmp.onInputFinished = function()
       what.image = tmp.text
       draw()
     end
-    local tmp = bn(15,10,6,1,cr1,cr2,cr1,cr2,lc.up)
+    local tmp = bn(15,9,6,1,cr1,cr2,cr1,cr2,lc.up)
     tmp.onTouch = function()
       for i = 1,#game.screen do
         if game.screen[i] == what then
@@ -332,7 +334,7 @@ function drawparams(whatt)
         end
       end
     end
-    local tmp = bn(15,11,6,1,cr1,cr2,cr1,cr2,lc.down)
+    local tmp = bn(15,10,6,1,cr1,cr2,cr1,cr2,lc.down)
     tmp.onTouch  = function()
       for i = 1,#game.screen do
         if game.screen[i] == what then
@@ -343,9 +345,9 @@ function drawparams(whatt)
         end
       end
     end
-    local tmp = bn(15,9,6,1,cr1,cr2,cr1,cr2,lc.delete)
+    local tmp = bn(15,8,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(15, 8, 5, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(15, 7, 5, 1, cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -378,54 +380,6 @@ function drawparams(whatt)
     local tmp = it(15, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
     tmp.onInputFinished = function()
       what.y = tonumber(tmp.text)
-      draw()
-    end
-    local tmp = it(15, 6, 20,1, cr1, cr2, cr3, cr1, cr2, what.path, "P")
-    tmp.onInputFinished = function()
-      what.path = tmp.text
-      draw()
-    end
-  elseif what.type == 'imageStorage' then
-    tt(1,2,cr2,lc.type..': '..what.type)
-    tt(1,3,cr2,lc.name)
-    tt(1,4,cr2,lc.path)
-    tt(1,5,cr2,lc.delete)
-    tt(1,6,cr2,lc.up)
-    tt(1,7,cr2,lc.down)
-    local tmp = bn(15,6,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(game.storage,i,i-1)
-          draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(15,7,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(game.storage,i,i+1)
-          draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(15,5,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = function() for i = 1,#game.storage do if what == game.storage[i] then table.remove(game.storage,i) break end end draw() drawtree() drawparams(game.storage[1]) end
-    local tmp = it(15, 3, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = params:addChild(GUI.filesystemChooser(15, 4, 10, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, string.gsub(what.path,'.pic',''), "/"))
-    tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-    tmp.onSubmit = function(path)
-      if fs.extension(path) ~= '.pic' then GUI.alert(lc.WaYP..' :discordSkull:') return end
-      what.path = path
       draw()
     end
   elseif what.type == 'input' then
@@ -1392,12 +1346,30 @@ function drawparams(whatt)
         draw()
       end
     end
+  elseif what.type == 'file' then
+    tt(1,2,cr2,lc.type..': '..what.type)
+    tt(1,3,cr2,lc.name)
+    tt(1,4,cr2,lc.path)
+    local tmp = params:addChild(GUI.filesystemChooser(15, 4, 10, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, string.gsub(what.path,fs.extension(what.path) or '',''), "/"))
+    tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+    tmp.onSubmit = function(path)
+      what.path = path
+      drawtree()
+      draw()
+    end
+    local tmp = it(15, 3, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
+    tmp.onInputFinished = function()
+      what.name = tmp.text
+      drawtree()
+      draw()
+    end
   else
     tt(1,1,cr2,lc.WYC)
   end
 end
 function objectmenu()
-  choose = win:addChild(GUI.filledWindow(1,2,50,20,cr1))
+  choose = win:addChild(GUI.filledWindow(55,20,50,20,cr1))
+  choose.actionButtons.close.onTouch = function() choose:remove() end
   if treemode == 'screen' then
   local tmp = choose:addChild(GUI.button(6,14,#lc.panel,1,cr1,cr2,cr1,cr2,lc.panel))
   tmp.onTouch = function()
@@ -1407,7 +1379,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,4,#lc.text,1,cr1,cr2,cr1,cr2,lc.text))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = true,type = 'text',x=1,y=1,color=cr2,text='Text',name = 'Text'})
+    new(game.screen,{visible = true,type = 'text',x=1,y=1,color=cr1,text='Text',name = 'Text'})
   end
   local tmp = choose:addChild(GUI.button(15,10,#lc.progressBar,1,cr1,cr2,cr1,cr2,lc.progressBar))
   tmp.onTouch = function()
@@ -1447,7 +1419,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,8,#lc.image,1,cr1,cr2,cr1,cr2,lc.image))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = true, type = 'image',x=1,y=1,image='imageStorage',name = 'image',path = 'Script'})
+    new(game.screen,{visible = true, type = 'image',x=1,y=1,image='StorageEl',name = 'image',path = 'Script'})
   end
   local tmp = choose:addChild(GUI.button(6,6,#lc.button,1,cr1,cr2,cr1,cr2,lc.button))
   tmp.onTouch = function()
@@ -1462,11 +1434,14 @@ function objectmenu()
     new(game.scripts,{autoload = false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = 'script',type = 'script'})
   end
   elseif treemode == 'storage' then
-    local tmp = choose:addChild(GUI.button(6,3,#lc.imageStorage,1,cr1,cr2,cr1,cr2,lc.imageStorage))
-    tmp.onTouch = function()
-    choose:remove()
-    new(game.storage,{path = '/MineOS/Icons/Script.pic',name = 'imageStorage',type = 'imageStorage'})
-    end
+local tmp = choose:addChild(GUI.filesystemChooser(2, 5, 10, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.name, "/"))
+tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+tmp.onSubmit = function(path)
+choose:remove()
+    new(game.storage,{path = path,name = 'StorageEl',type = 'file'})
+  draw()
+  drawtree()
+end
   end
 end
 
@@ -1513,7 +1488,7 @@ function drawtree()
     end
     y = 3
     for i = 1,#game.screen do
-      tmp = obj:addChild(GUI.button(2,y,#game.screen[i].type,1,cr1,cr2,cr1,cr2, game.screen[i].name))
+      tmp = obj:addChild(GUI.button(2,y,#game.screen[i].name,1,cr1,cr2,cr1,cr2, game.screen[i].name))
       tmp.onTouch = function()
         drawparams(game.screen[i])
       end
@@ -1527,7 +1502,7 @@ function drawtree()
     end
     y = 3
     for i = 1,#game.scripts do
-      tmp = obj:addChild(GUI.button(2,y,#game.scripts[i].type,1,cr1,cr2,cr1,cr2, game.scripts[i].name))
+      tmp = obj:addChild(GUI.button(2,y,#game.scripts[i].name,1,cr1,cr2,cr1,cr2, game.scripts[i].name))
       tmp.onTouch = function()
         drawparams(game.scripts[i])
       end
@@ -1541,7 +1516,7 @@ function drawtree()
     end
     y = 3
     for i = 1,#game.storage do
-      tmp = obj:addChild(GUI.button(2,y,#game.storage[i].type,1,cr1,cr2,cr1,cr2, game.storage[i].name))
+      tmp = obj:addChild(GUI.button(2,y,#game.storage[i].name,1,cr1,cr2,cr1,cr2, game.storage[i].name))
       tmp.onTouch = function()
         drawparams(game.storage[i])
       end
@@ -1561,47 +1536,47 @@ function draw()
   for i = 1,#gamee do
     if gamee[i].visible == true then
       if gamee[i].type == 'text' then
-        screen:addChild(GUI.text(gamee[i].x,gamee[i].y,gamee[i].color,gamee[i].text))
+        screen:addChild(GUI.text(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].color),gamee[i].text))
       end
       if gamee[i].type == 'panel' then
-        screen:addChild(GUI.panel(gamee[i].x,gamee[i].y,gamee[i].width,gamee[1].heigth,gamee[i].color))
+        screen:addChild(GUI.panel(tonumber(gamee[i].x),tonumber(gamee[i]).y,tonumber(gamee[i].width),tonumber(gamee[1].heigth),tonumber(gamee[i].color)))
       end
       if gamee[i].type == 'button' then
-        screen:addChild(GUI.button(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].height,gamee[i].colorbg,gamee[i].colorfg,gamee[i].colorbgp,gamee[i].colorfgp,gamee[i].text))
+        screen:addChild(GUI.button(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorbgp),tonumber(gamee[i].colorfgp),gamee[i].text))
       end
       if gamee[i].type == 'slider' then
-        screen:addChild(GUI.slider(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].colorp,gamee[i].colors,gamee[i].colorpp,gamee[i].colorv,gamee[i].minv,gamee[i].maxv,gamee[i].value))
+        screen:addChild(GUI.slider(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorpp),tonumber(gamee[i].colorv),tonumber(gamee[i].minv),tonumber(gamee[i].maxv),tonumber(gamee[i].value)))
       end
       if gamee[i].type == 'progressIndicator' then
-        screen:addChild(GUI.progressIndicator(gamee[i].x,gamee[i].y,gamee[i].colorpa,gamee[i].colorp,gamee[i].colors))
+        screen:addChild(GUI.progressIndicator(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].colorpa),tonumber(gamee[i].colorp),tonumber(gamee[i].colors)))
       end
       if gamee[i].type == 'progressBar' then
-        screen:addChild(GUI.progressBar(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].colorp,gamee[i].colors,gamee[i].colorv,gamee[i].value))
+        screen:addChild(GUI.progressBar(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorv),tonumber(gamee[i].value)))
       end
       if gamee[i].type == 'comboBox' then
-        local tmp = screen:addChild(GUI.comboBox(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].elh,gamee[i].colorbg,gamee[i].colort,gamee[i].colorabg,gamee[i].colorat))
+        local tmp = screen:addChild(GUI.comboBox(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].elh),tonumber(gamee[i].colorbg),tonumber(gamee[i].colort),tonumber(gamee[i].colorabg),tonumber(gamee[i].colorat)))
         for e = 1,#gamee[i].items do
           tmp:addItem(gamee[i].items[e].name,gamee[i].items[e].active)
         end
       end
       if gamee[i].type == 'colorSelector' then
-        screen:addChild(GUI.colorSelector(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].height,gamee[i].color,gamee[i].text))
+        screen:addChild(GUI.colorSelector(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color),gamee[i].text))
       end
       if gamee[i].type == 'input' then
        screen:addChild(GUI.input(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].height,gamee[i].colorbg,gamee[i].colorfg,gamee[i].colorph,gamee[i].colorfg,gamee[i].colorfgp,gamee[i].text,gamee[i].textph))
       end
       if gamee[i].type == 'switch' then
-        screen:addChild(GUI.switch(gamee[i].x,gamee[i].y,gamee[i].width,gamee[i].colorp,gamee[i].colors,gamee[i].colorpp,gamee[i].state))
+        screen:addChild(GUI.switch(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorpp),gamee[i].state))
       end
       if gamee[i].type == 'image' then
         idk = nil
         for e = 1,#game.storage do
-          if game.storage[e].type == 'imageStorage' and game.storage[e].name == gamee[i].image then
+          if game.storage[e].name == gamee[i].image and fs.extension(game.storage[e].path) == '.pic' then
             idk = game.storage[e].path
           end
         end
         if idk == nil then idk = '/MineOS/Icons/Script.pic' end
-        screen:addChild(GUI.image(gamee[i].x,gamee[i].y,image.load(idk)))
+        screen:addChild(GUI.image(tonumber(gamee[i].x),tonumber(gamee[i].y),image.load(idk)))
       end
     end
   end
@@ -1611,10 +1586,10 @@ local tmp = win:addChild(GUI.filesystemChooser(14, 1, 10, 1, cr1, cr2, cr1, cr2,
 tmp:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 tmp.onSubmit = function(path)
   if fs.exists(path) then GUI.alert(lc.YNEF) return end
-  if not fs.exists(path..'.proj') then fs.makeDirectory(path..'.proj') end
+  fs.makeDirectory(path..'.proj')
   fs.writeTable(path..'.proj/Game.dat',game)
   for i = 1,#game.storage do
-    fs.copy(game.storage[i].path,path..'.proj/'..game.storage[i].name..'.pic')
+    fs.copy(game.storage[i].path,path..'.proj/'..fs.name(game.storage[i].path))
   end
   for i = 1,#game.scripts do
     fs.copy(game.scripts[i].path,path..'.proj/'..game.scripts[i].name..'.lua')
@@ -1629,11 +1604,9 @@ tmp.onSubmit = function(path)
   game = fs.readTable(path..'/Game.dat')
   idk = fs.list(path)
   for i = 1,#idk do
-    if fs.extension(idk[i]) == '.pic' then
-      for e = 1, #game.storage do
-        if game.storage[e].name == string.gsub(idk[i],'.pic','') then
-          game.storage[e].path = path..idk[i]
-        end
+    for e = 1, #game.storage do
+      if game.storage[e].name == string.gsub(idk[i],fs.extension(idk[i]) or '','') then
+        game.storage[e].path = path..idk[i]
       end
     end
     if fs.extension(idk[i]) == '.lua' then
@@ -1653,17 +1626,22 @@ filesystemChooser.onSubmit = function(path)
   if fs.exists(path) then GUI.alert(lc.EF) return end
   fs.makeDirectory(path..'.app')
   local towrite = ''
-  towrite = towrite .. 'image = require("Image")\nfs = require("filesystem")\nevent = require("event")\nGUI = require("GUI")\n system = require("System")\nrequire("opengames")\nscriptpath = string.gsub(system.getCurrentScript(),"/Main.lua","")\ngame = fs.readTable(scriptpath.."/Game.dat")\nwk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.heigth,0x989898))\n'
+  towrite = towrite .. 'image = require("Image")\nfs = require("filesystem")\nevent = require("event")\nGUI = require("GUI")\n system = require("System")\nrequire("opengames")\nscriptpath = string.gsub(system.getCurrentScript(),"/Main.lua","")\ngame = fs.readTable(scriptpath.."/Game.dat")\ngame.localization=system.getCurrentScriptLocalization()\nwk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.heigth,0x989898))\n'
   fs.makeDirectory(path..'.app/Scripts')
   fs.makeDirectory(path..'.app/Assests')
+  fs.makeDirectory(path..'.app/Localizations')
   for i = 1,#game.storage do
-    fs.copy(game.storage[i].path,path..'.app/Assests/'..game.storage[i].name..'.pic')
+    if fs.extension(game.storage[i].path) == '.lang' then 
+      fs.copy(game.storage[i].path,path..'.app/Localizations/'..fs.name(game.storage[i].path)) 
+    else
+      fs.copy(game.storage[i].path,path..'.app/Assests/'..fs.name(game.storage[i].path))
+    end
   end
   for i = 1,#game.scripts do
     fs.copy(game.scripts[i].path,path..'.app/Scripts/'..game.scripts[i].name..'.lua')
   end
   for i = 1, #game.storage do
-    game.storage[i].path = path..'.app/Assests/'..game.storage[i].name..'.pic'
+    game.storage[i].path = path..'.app/Assests/'..fs.name(game.storage[i].path)
   end
   for i = 1, #game.scripts do
     game.scripts[i].path = path..'.app/Scripts/'..game.scripts[i].name..'.lua'
@@ -1673,15 +1651,14 @@ filesystemChooser.onSubmit = function(path)
   fs.write(path..'.app/Main.lua',towrite)
   idk = nil
   for e = 1,#game.storage do
-    if game.storage[e].type == 'imageStorage' and game.storage[e].name == 'Icon' then
+    if game.storage[e].name == 'Icon' then
       idk = game.storage[e].path
     end
   end
   if idk == nil then idk = '/MineOS/Icons/Script.pic' end
   fs.copy(idk,path..'.app/Icon.pic')
 end
-
 draw()
 drawtree()
-drawparams(game.screen[1])
+drawparams()
  
