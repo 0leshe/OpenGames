@@ -31,7 +31,7 @@
   colorfgp = 'ЦветПН',
   visible = 'Видимость',
   delete = 'Снести',
-  path = 'Путь',
+  path = 'Скрипт',
   value = 'Значение',
   colorv = 'ЦветЗ',
   maxv = 'Макс.З',
