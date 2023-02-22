@@ -31,7 +31,7 @@
   colorfgp = 'ColorFGP',
   visible = 'Visible',
   delete = 'Delete',
-  path = 'Path',
+  path = 'Script',
   value = 'Value',
   colorv = 'ColorV',
   maxv = 'MaxV',
