@@ -4,7 +4,7 @@ function draw()
   win:addChild(GUI.panel(1,1,game.window.width,game.window.heigth,game.window.color))
   win:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
   if game.window.abn == true then
-    local tmp = win:addChild(GUI.actionButtons(2,2,false))
+    local tmp = win:addChild(GUI.actionButtons(1,1,false))
     tmp.close.onTouch = function() win:remove() end
     tmp.maximize.onTouch = function() win.maximize() end
     tmp.minimize.onTouch = function() win.minimize() end
