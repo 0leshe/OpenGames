@@ -2,6 +2,7 @@ function draw()
   win:removeChildren()
   gamee = game.screen
   win:addChild(GUI.panel(1,1,game.window.width,game.window.heigth,game.window.color))
+  win:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
   if game.window.abn == true then
     local tmp = win:addChild(GUI.actionButtons(2,2,false))
     tmp.close.onTouch = function() win:remove() end
@@ -15,7 +16,7 @@ function draw()
         win:addChild(GUI.text(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].color),text))
       end
       if gamee[i].type == 'panel' then
-        win:addChild(GUI.panel(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[1].heigth),tonumber(gamee[i].color)))
+        win:addChild(GUI.panel(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color)))
       end
       if gamee[i].type == 'button' then
       if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
