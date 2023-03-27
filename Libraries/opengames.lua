@@ -20,7 +20,7 @@ function draw()
       end
       if gamee[i].type == 'button' then
       if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
-        win:addChild(GUI.button(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorbgp),tonumber(gamee[i].colorfgp),text)).onTouch = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
+        win:addChild(GUI.button(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorbgp),tonumber(gamee[i].colorfgp),text)).onTouch = function() system.execute(gamepath..'/Scripts/'..game.screen[i].onTouch) end
       end
       if gamee[i].type == 'input' then
       if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
@@ -28,7 +28,7 @@ function draw()
         local tmp = win:addChild(GUI.input(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].colorbg),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorph),tonumber(gamee[i].colorfg),tonumber(gamee[i].colorfgp),text,textph))
         tmp.onInputFinished = function() 
           game.screen[i].text = tmp.text
-          system.execute(scriptpath..'/Scripts/'..game.screen[i].onInputEnded) 
+          system.execute(gamepath..'/Scripts/'..game.screen[i].onInputEnded) 
         end
       end
       if gamee[i].type == 'slider' then
@@ -52,10 +52,10 @@ function draw()
       end
       if gamee[i].type == 'colorSelector' then
         if gamee[i].text == '{loc}' or gamee[i].text == '{localization}' then text = game.localization[gamee[i].name] else text = gamee[i].text end
-        win:addChild(GUI.colorSelector(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color),text)).onColorSelected = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onTouch) end
+        win:addChild(GUI.colorSelector(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].height),tonumber(gamee[i].color),text)).onColorSelected = function() system.execute(gamepath..'/Scripts/'..game.screen[i].onTouch) end
       end
       if gamee[i].type == 'switch' then
-        win:addChild(GUI.switch(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorpp),tonumber(gamee[i].state))).onStateChanged = function() system.execute(scriptpath..'/Scripts/'..game.screen[i].onStateChanged) end
+        win:addChild(GUI.switch(tonumber(gamee[i].x),tonumber(gamee[i].y),tonumber(gamee[i].width),tonumber(gamee[i].colorp),tonumber(gamee[i].colors),tonumber(gamee[i].colorpp),tonumber(gamee[i].state))).onStateChanged = function() system.execute(gamepath..'/Scripts/'..game.screen[i].onStateChanged) end
       end
       if gamee[i].type == 'image' then
         idk = nil
