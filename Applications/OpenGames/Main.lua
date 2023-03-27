@@ -1494,6 +1494,7 @@ end
     tt(3,3,cr2,lc.type..': '..what.type)
     tt(3,4,cr2,lc.name)
     tt(3,5,cr2,lc.path)
+    tt(3,6,cr2,lc.delete)
     local tmp = params:addChild(GUI.filesystemChooser(17, 5, 20, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, string.gsub(what.path,fs.extension(what.path) or '',''), "/"))
     tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
     tmp.onSubmit = function(path)
@@ -1509,10 +1510,12 @@ end
       draw()
     end
     if fs.extension(what.path) == '.pic' then
-    		local tmp = params:addChild(GUI.container(3,7,36,14))
+    		local tmp = params:addChild(GUI.container(3,8,36,13))
     		tmp:addChild(GUI.panel(1,1,36,14,0x808080))
     		tmp:addChild(GUI.image(1,1,image.load(what.path)))
     end
+    local tmp = bn(17,6,6,1,cr1,cr2,cr1,cr2,lc.delete)
+    tmp.onTouch = function () for i = 1,#game.storage do if what == game.storage[i] then table.remove(game.storage,i) break end end draw() drawtree() drawparams(game.storage[1]) end
   else
     tt(1,1,cr2,lc.WYC)
   end
@@ -1579,7 +1582,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,6,#lc.button/divide,1,cr1,cr2,cr1,cr2,lc.button))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = true,onTouch = '', height = 5,width = 20, type = 'button',x=1,y=1,name = 'button',colorbg= cr1,colorfg = cr2,colorbgp = cr1,colorfgp=cr2,text='Button'})
+    new(game.screen,{visible = true,onTouch = '', height = 3,width = 20, type = 'button',x=1,y=1,name = 'button',colorbg= cr1,colorfg = cr2,colorbgp = cr1,colorfgp=cr2,text='Button'})
   end
   elseif treemode == 'script' then
     local tmp = choose:addChild(GUI.button(6,4,#lc.script/divide,1,cr1,cr2,cr1,cr2,lc.script))
