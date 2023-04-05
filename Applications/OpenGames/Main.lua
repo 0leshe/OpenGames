@@ -9,13 +9,14 @@ local OE = require('opengames')
 local compressor = require('compressor')
 local lc = system.getCurrentScriptLocalization()
 local userSettings = system.getUserSettings()
-if not userSettings.OpenGames then
+if not userSettings.opengames then
+		userSettings.opengames = {}
 		system.saveUserSettings()
 end
 gamepath = ''
-local cr1, cr2,cr3,cr4 = userSettings.cr1 or 0x989898, userSettings.cr2 or 0x505050,userSettings.cr3 or 0x000000,userSettings.cr4 or 0x757575
+local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 treemode = 'screen'
-game = {scripts = {},window = {abn = userSettings.windowABN or true,type = 'window',width=userSettings.windowWidth or 80,height= userSettings.windowHeight or 40,title = userSettings.windowTitle or 'Title',color = userSettings.windowColor or cr4,titleColor = userSettings.windowTitleColor or cr2},screen = {buffer = {window={}}},storage={}}
+game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {window={}}},storage={}}
 
 wk,win,menu = system.addWindow(GUI.filledWindow(0,0,160,50,0x8E8E8E))
 local function changePosition(idk,fromposition,toposition)
@@ -110,7 +111,7 @@ function drawparams(whatt)
     end
     local tmp = bn(17,10,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 9, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 9, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -283,7 +284,7 @@ function drawparams(whatt)
     		end
     		end
     end
-    local tmp = bx(17, 16, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 16, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.animated == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.animated = true
@@ -303,7 +304,7 @@ function drawparams(whatt)
         draw()
       end
     end
-    local tmp = bx(17, 18, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 18, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.disabled == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.disabled = true
@@ -323,7 +324,7 @@ function drawparams(whatt)
         draw()
       end
     end
-    local tmp = bx(17, 17, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 17, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.switchMode == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.switchMode = true
@@ -367,7 +368,7 @@ function drawparams(whatt)
     end
     local tmp = bn(17,20,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 19, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 19, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -495,7 +496,7 @@ function drawparams(whatt)
     end
     local tmp = bn(17,7,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = function() for i = 1,#game.scripts do if what == game.scripts[i] then table.remove(game.scripts,i) break end end draw() drawtree() drawparams(game.scripts[1]) end
-    local tmp = bx(17, 6, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 6, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.autoload == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.autoload = true
@@ -574,7 +575,7 @@ end
     end
     local tmp = bn(17,9,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 8, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 8, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -656,7 +657,7 @@ end
     end
     local tmp = bn(17,17,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(16, 18, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(16, 18, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -800,7 +801,7 @@ end
     end
     local tmp = bn(17,14,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 13, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 13, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -846,7 +847,7 @@ end
       draw()
       end
     end
-    local tmp = bx(17, 12, #lc.falsee/divide+2, 1,cr1, cr2, cr1,cr2)
+    local tmp = bx(17, 12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1,cr2)
     if what.state == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.state = true
@@ -930,7 +931,7 @@ end
       draw()
       end
     end
-    local tmp = bx(17, 9, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 9, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.abn == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.abn = true
@@ -1038,7 +1039,7 @@ end
     end
     local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17,12, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17,12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -1150,7 +1151,7 @@ end
     end
     local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 12, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -1477,7 +1478,7 @@ end
     end
     local tmp = bn(17,16,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 15, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 15, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -1573,7 +1574,7 @@ end
     end
     local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.delete)
     tmp.onTouch = del
-    local tmp = bx(17, 10, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
+    local tmp = bx(17, 10, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
     if what.visible == true then
       tmp:addItem(lc.truee).onTouch = function()
         what.visible = true
@@ -1735,70 +1736,70 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,14,#lc.panel/divide,1,cr1,cr2,cr1,cr2,lc.panel))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.panelVisible or true,type = 'panel',x=userSettings.panelX or 1,y=userSettings.panelY or 1,color=userSettings.color or cr1,width = userSettings.panelWidth or 10,height=  userSettings.panelHeigth or 10,name = userSettings.panelName or 'Panel'})
+    new(game.screen,{visible = true,type = 'panel',x=userSettings.opengames.panelX or 1,y=userSettings.opengames.panelY or 1,color=userSettings.opengames.color or cr1,width = userSettings.opengames.panelWidth or 10,height=  userSettings.opengames.panelHeigth or 10,name = userSettings.opengames.panelName or 'Panel'})
   end
   local tmp = choose:addChild(GUI.button(6,4,#lc.text/divide,1,cr1,cr2,cr1,cr2,lc.text))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible =userSettings.textVisible or true,type = 'text',x=userSettings.textX or 1,y=userSettings.textY or 1,color=userSettings.textColor or cr2,text=userSettings.textText or 'Text',name = userSettings.textName or 'Text'})
+    new(game.screen,{visible =true,type = 'text',x=userSettings.opengames.textX or 1,y=userSettings.opengames.textY or 1,color=userSettings.opengames.textColor or cr2,text=userSettings.opengames.textText or 'Text',name = userSettings.opengames.textName or 'Text'})
   end
   local tmp = choose:addChild(GUI.button(25,6,#lc.progressBar/divide,1,cr1,cr2,cr1,cr2,lc.progressBar))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.progressBarVisible or true,width=userSettings.progressBarWidth or 20,colorp = userSettings.progressBarColorP or cr1,colors=userSettings.progressBarColorS or cr2,colorv=userSettings.progressBarColorV or cr2,type = 'progressBar',x=userSettings.progessBarX or 1,y=userSettings.progressBarY or 1,color= userSettings.progressBarColor or cr1,value=userSettings.progressBarValue or 50,name = userSettings.progressBarname or 'ProgressBar'})
+    new(game.screen,{visible = true,width=userSettings.opengames.progressBarWidth or 20,colorp = userSettings.opengames.progressBarColorP or cr1,colors=userSettings.opengames.progressBarColorS or cr2,colorv=userSettings.opengames.progressBarColorV or cr2,type = 'progressBar',x=userSettings.opengames.progessBarX or 1,y=userSettings.opengames.progressBarY or 1,color= userSettings.opengames.progressBarColor or cr1,value=userSettings.opengames.progressBarValue or 50,name = userSettings.opengames.progressBarname or 'ProgressBar'})
   end
   local tmp = choose:addChild(GUI.button(25,8,#lc.comboBox/divide,1,cr1,cr2,cr1,cr2,lc.comboBox))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.comboBoxVisible or true,type = 'comboBox',width=userSettings.comboBoxWidth or 20,x=userSettings.comboBoxX or 1,y=userSettings.comboBoxY or 1,elh=userSettings.ComboBoxELH or 3,items={{name=userSettings.comboBoxItemsName or 'Item',active = false,type='itemComboBox',path=''}},colorbg=userSettings.comboBoxColorBG or cr1,colort=userSettings.comboBoxColorT or cr2,colorabg=userSettings.comboBoxColorABG or cr1,colorat=userSettings.comboBoxColorAT or cr2,name = userSettings.comboBoxName or 'ComboBox'})
+    new(game.screen,{visible = true,type = 'comboBox',width=userSettings.opengames.comboBoxWidth or 20,x=userSettings.opengames.comboBoxX or 1,y=userSettings.opengames.comboBoxY or 1,elh=userSettings.opengames.comboBoxELH or 3,items={{name=userSettings.opengames.comboBoxItemsName or 'Item',active = false,type='itemComboBox',path=''}},colorbg=userSettings.opengames.comboBoxColorBG or cr1,colort=userSettings.opengames.comboBoxColorT or cr2,colorabg=userSettings.opengames.comboBoxColorABG or cr1,colorat=userSettings.opengames.comboBoxColorAT or cr2,name = userSettings.opengames.comboBoxName or 'ComboBox'})
   end
   local tmp = choose:addChild(GUI.button(7,18,#lc.slider/divide,1,cr1,cr2,cr1,cr2,lc.slider))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.sliderVisible or true,type = 'slider',x=userSettings.sliderX or 1,y=userSettings.sliderY or 1,width=userSettings.sliderWidth or 20,colorp=userSettings.sliderColorP or cr1,colors=userSettings.sliderColorS or cr2,colorpp=userSettings.sliderColorPP or cr1,colorv=userSettings.sliderColorV or cr2,minv=userSettings.sliderMinv or 1,maxv=userSettings.sliderMaxv or 100,value=userSettings.sliderValue or 50,text=userSettings.sliderText or 'Slider',name = userSettings.sliderName or 'Slider'})
+    new(game.screen,{visible = true,type = 'slider',x=userSettings.opengames.sliderX or 1,y=userSettings.opengames.sliderY or 1,width=userSettings.opengames.sliderWidth or 20,colorp=userSettings.sliderColorP or cr1,colors=userSettings.opengames.sliderColorS or cr2,colorpp=userSettings.opengames.sliderColorPP or cr1,colorv=userSettings.opengames.sliderColorV or cr2,minv=userSettings.opengames.sliderMinv or 1,maxv=userSettings.opengames.sliderMaxv or 100,value=userSettings.opengames.sliderValue or 50,text=userSettings.opengames.sliderText or 'Slider',name = userSettings.opengames.sliderName or 'Slider'})
   end
   local tmp = choose:addChild(GUI.button(25,4,#lc.progressIndicator/divide,1,cr1,cr2,cr1,cr2,lc.progressIndicator))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.piVisible or true,type = 'progressIndicator',x=userSettings.piX or 1,y=userSettings.piY or 1,active=userSettings.piActive or false,rollStage=userSettings.piRollStage or 1,colorp= userSettings.piColorP or cr1,colors=userSettings.piColorS or cr2,colorpa=userSettings.piColorPA or cr3,name = userSettings.piName or 'pI'})
+    new(game.screen,{visible = true,type = 'progressIndicator',x=userSettings.opengames.piX or 1,y=userSettings.opengames.piY or 1,active=userSettings.opengames.piActive or false,rollStage=userSettings.opengames.piRollStage or 1,colorp= userSettings.opengames.piColorP or cr1,colors=userSettings.opengames.piColorS or cr2,colorpa=userSettings.opengames.piColorPA or cr3,name = userSettings.opengames.piName or 'pI'})
   end
   local tmp = choose:addChild(GUI.button(7,16,#lc.collorSelector/divide,1,cr1,cr2,cr1,cr2,lc.collorSelector))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.csVisible or true,path='',type = 'colorSelector',color=userSettings.csColor or 0xFF00FF,x=userSettings.csX or 1,y=userSettings.csY or 1,width=userSettings.csWidth or 20,height=userSettings.csHeight or 3,text=userSettings.csText or 'Color Selector',name = userSettings.csName or 'ColorSelector'})
+    new(game.screen,{visible = true,path='',type = 'colorSelector',color=userSettings.opengames.csColor or 0xFF00FF,x=userSettings.opengames.csX or 1,y=userSettings.opengames.csY or 1,width=userSettings.opengames.csWidth or 20,height=userSettings.opengames.csHeight or 3,text=userSettings.opengames.csText or 'Color Selector',name = userSettings.opengames.csName or 'ColorSelector'})
   end
   local tmp = choose:addChild(GUI.button(6,10,#lc.input/divide,1,cr1,cr2,cr1,cr2,lc.input))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.inputVisible or true,onInputEnded = '',width=userSettings.inputWidth or 20,height=userSettings.inputHeight or 3,colorbg = userSettings.inputColorBG or cr1,colorfg = userSettings.inputColorFG or cr2,colorfgp = userSettings.inputColorFGP or cr1,colorbgp = userSettings.inputColorBGP or cr4,colorph=userSettings.inputColorPH or 0x2D2D2D,type = 'input',x=userSettings.inputX or 1,y=userSettings.inputY or 1,name = userSettings.inputName or 'Input',text = userSettings.inputText or 'Input',textph = userSettings.inputTextPH or 'Text'})
+    new(game.screen,{visible = true,onInputEnded = '',width=userSettings.opengames.inputWidth or 20,height=userSettings.opengames.inputHeight or 3,colorbg = userSettings.opengames.inputColorBG or cr1,colorfg = userSettings.opengames.inputColorFG or cr2,colorfgp = userSettings.opengames.inputColorFGP or cr1,colorbgp = userSettings.opengames.inputColorBGP or cr4,colorph=userSettings.opengames.inputColorPH or 0x2D2D2D,type = 'input',x=userSettings.opengames.inputX or 1,y=userSettings.opengames.inputY or 1,name = userSettings.opengames.inputName or 'Input',text = userSettings.opengames.inputText or 'Input',textph = userSettings.opengames.inputTextPH or 'Text'})
   end
   local tmp = choose:addChild(GUI.button(6,12,#lc.switch/divide,1,cr1,cr2,cr1,cr2,lc.switch))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{onStateChanged = userSettings.switchonStateChanged or '', visible =userSettings.switchVisible or true,state=userSettings.switchState or false,type = 'switch',x=userSettings.switchX or 1,y=userSettings.switchY or 1,width=userSettings.switchWidth or 8,colorp= userSettings.switchColorP or cr2, colors=userSettings.switchColorS or cr2,colorpp=userSettings.switchColorPP or cr1,name = userSettings.switchName or 'Switch'})
+    new(game.screen,{onStateChanged = userSettings.opengames.switchOnStateChanged or '', visible =userSettings.opengames.switchVisible or true,state=userSettings.opengames.switchState or false,type = 'switch',x=userSettings.opengames.switchX or 1,y=userSettings.opengames.switchY or 1,width=userSettings.switchWidth or 8,colorp= userSettings.opengames.switchColorP or cr2, colors=userSettings.opengames.switchColorS or cr2,colorpp=userSettings.opengames.switchColorPP or cr1,name = userSettings.opengames.switchName or 'Switch'})
   end
   local tmp = choose:addChild(GUI.button(6,8,#lc.image/divide,1,cr1,cr2,cr1,cr2,lc.image))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.imageVisible or true, type = 'image',x=userSettings.imageX or 1,y=userSettings.imageY or 1,image=userSettings.imageImage or 'StorageEl',name = userSettings.imageName or 'image',path = userSettings.imagePath or 'Script'})
+    new(game.screen,{visible = true, type = 'image',x=userSettings.opengames.imageX or 1,y=userSettings.opengames.imageY or 1,image=userSettings.opengames.imageImage or 'StorageEl',name = userSettings.opengames.imageName or 'image',path = userSettings.opengames.imagePath or 'Script'})
   end
   local tmp = choose:addChild(GUI.button(6,6,#lc.button/divide,1,cr1,cr2,cr1,cr2,lc.button))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = userSettings.buttonVisible or true,onTouch = userSettings.buttonOnTouch or '', height = userSettings.buttonHeight or 3,width = userSettings.buttonWidth or 20, animated = userSettings.buttonAnimated or true, disabled = userSettings.buttonDisabled or false, prevMode = userSettings.buttonsPrevMode or 'roundedButton', switchMode = userSettings.buttonSwitchMode or false, mode = userSettings.buttonMode or 'default', type = 'button',x= userSettings.buttonX or 1,y=userSettings.buttonY or 1,name = userSettings.buttonName or 'button',colorbg= userSettings.buttonColorBG or cr1,colorfg = userSettings.buttonColorFG or cr2,colorbgp = userSettings.buttonColorBGP or cr2,colorfgp= userSettings.buttonColorFGP or cr1,text=userSettings.buttonText or 'Button'})
+    new(game.screen,{visible = true,onTouch = userSettings.opengames.buttonOnTouch or '', height = userSettings.opengames.buttonHeight or 3,width = userSettings.opengames.buttonWidth or 20, animated = userSettings.opengames.buttonAnimated or true, disabled = userSettings.opengames.buttonDisabled or false, prevMode = userSettings.opengames.buttonsPrevMode or 'roundedButton', switchMode = userSettings.opengames.buttonSwitchMode or false, mode = userSettings.opengames.buttonMode or 'default', type = 'button',x= userSettings.opengames.buttonX or 1,y=userSettings.opengames.buttonY or 1,name = userSettings.opengames.buttonName or 'button',colorbg= userSettings.opengames.buttonColorBG or cr1,colorfg = userSettings.opengames.buttonColorFG or cr2,colorbgp = userSettings.opengames.buttonColorBGP or cr2,colorfgp= userSettings.opengames.buttonColorFGP or cr1,text=userSettings.opengames.buttonText or 'Button'})
   end
   elseif treemode == 'script' then
     local tmp = choose:addChild(GUI.button(6,4,#lc.script/divide,1,cr1,cr2,cr1,cr2,lc.script))
     tmp.onTouch = function()
       choose:remove()
       fs.write('/Temporary/'..tostring(#game.scripts+1)..'.lua',lc.DFtS)
-      new(game.scripts,{autoload = userSettings.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = userSettings.scriptName or 'script',type = 'script'})
+      new(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = userSettings.opengames.scriptName or 'script',type = 'script'})
     end
     local tmp = choose:addChild(GUI.filesystemChooser(5, 6, 10, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.choose, "/"))
     tmp.onSubmit = function(path)
     		if fs.extension(path) == '' or fs.extension(path) == '.lua' then
      		 choose:remove()
-       	new(game.scripts,{autoload = userSettings.scriptAutoload or false,path = path,name = userSettings.scriptName or 'Script',type = 'script'})
+       	new(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = path,name = userSettings.opengames.scriptName or 'Script',type = 'script'})
       end
     end
   elseif treemode == 'storage' then
@@ -1806,7 +1807,7 @@ local tmp = choose:addChild(GUI.filesystemChooser(6, 4, #lc.path/divide+3, 1, cr
 tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 tmp.onSubmit = function(path)
 choose:remove()
-    new(game.storage,{path = path,name = userSettings.storageElName or 'StorageEl',type = 'file'})
+    new(game.storage,{path = path,name = userSettings.opengames.storageName or 'StorageEl',type = 'file'})
   draw()
   drawtree()
 end
@@ -1953,7 +1954,10 @@ local function saveAsWindow ()
 end
 local function new()
 		treemode = 'screen'
-		game = {scripts = {},window = {abn = userSettings.windowABN or true,type = 'window',width=userSettings.windowWidth or 80,heigth= userSettings.windowHeight or 40,title = userSettings.windowTitle or 'Title',color = userSettings.windowColor or cr4,titleColor = userSettings.windowTitleColor or cr2},screen = {},storage={}}
+		for i = 1,#game.screen do
+				game.screen[i].raw:remove()
+		end
+		game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,heigth= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {},storage={}}
 		draw()
 		drawtree()
 		drawparams()
@@ -2119,311 +2123,108 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 	tmp:show()
 end
 local usualParams = menu:addContextMenuItem(lc.sampleParams)
-local function sampleParams()
-		local tmp = usualParams:addSubMenuItem(lc.overall)
-		tmp:addItem(lc.cr1).onTouch = function()
+local function colorItem(localization,param,tmp)
+		tmp:addItem(localization).onTouch = function()
 			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.cr1 == nil then userSettings.cr1 = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.cr1 or cr1, hts(userSettings.cr1) or hts(cr1)))
+			  if userSettings.opengames[param] == nil then userSettings.opengames[param] = cr1 end
+			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.opengames[param] or cr1, hts(userSettings.opengames[param]) or hts(cr1)))
 			  tmpp.onColorSelected = function()
-			    userSettings.cr1 = tonumber(tmpp.color)
+			    userSettings.opengames[param] = tonumber(tmpp.color)
 					 	system.saveUserSettings()
 			  end
-		end
-		tmp:addItem(lc.cr2).onTouch = function()
+			end
+end
+local function standartItem(localization,param,tmp)
+		tmp:addItem(localization).onTouch = function()
 			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.cr2 == nil then userSettings.cr1 = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.cr2 or cr2, hts(userSettings.cr2) or hts(cr2)))
-			  tmpp.onColorSelected = function()
-			    userSettings.cr2 = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.cr3).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.cr3 == nil then userSettings.cr1 = cr3 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.cr3 or cr3, hts(userSettings.cr3) or hts(cr3)))
-			  tmpp.onColorSelected = function()
-			    userSettings.cr3 = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.cr4).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.cr4 == nil then userSettings.cr1 = cr4 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.cr4 or cr4, hts(userSettings.cr4) or hts(cr4)))
-			  tmpp.onColorSelected = function()
-			    userSettings.cr4 = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.windowColor).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.windowColor == nil then userSettings.windowColor = cr4 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.windowColor or cr4, hts(userSettings.windowColor) or hts(cr4)))
-			  tmpp.onColorSelected = function()
-			    userSettings.windowColor = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.windowTitle).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.windowTitle) or 'Title'))
+			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.opengames[param])))
 			  tmpp.onInputFinished = function()
-			   userSettings.windowTitle = tmpp.text
+			   userSettings.opengames[param] = tmpp.text
 						system.saveUserSettings()
 			  end
 		end
-		tmp:addItem(lc.windowTitleColor).onTouch = function()
+end
+local function numberItem(localization,param,tmp)
+		tmp:addItem(localization).onTouch = function()
 			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.windowTitleColor == nil then userSettings.windowTitleColor = cr4 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.windowTitleColor or cr2, hts(userSettings.windowTitleColor) or hts(cr2)))
-			  tmpp.onColorSelected = function()
-			    userSettings.windowTitleColor = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.windowWidth).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.windowWidth) or '80'))
+			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.opengames[param])))
 			  tmpp.onInputFinished = function()
-			   userSettings.windowHeigth = tonumber(tmpp.text)
+			   userSettings.opengames[param] = tonumber(tmpp.text)
 						system.saveUserSettings()
 			  end
-		end
-		tmp:addItem(lc.windowHeight).onTouch = function()
+			end
+end
+local function chooseItem(localization,param,tmp)
+		tmp:addItem(localization).onTouch = function()
 			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.windowHeight) or '25'))
-			  tmpp.onInputFinished = function()
-			   userSettings.windowHeigth = tonumber(tmpp.text)
-						system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.windowABN).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2))
-    if userSettings.windowABN == nil then userSettings.windowABN = true end
-    if userSettings.windowABN == true then
+    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2))
+    if userSettings.opengames[param] == nil then userSettings.opengames[param] = true end
+    if userSettings.opengames[param] == true then
       tmp:addItem(lc.truee).onTouch = function()
-        userSettings.windowABN = true
+        userSettings.opengames[param] = true
 						system.saveUserSettings()
       end
       tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.windowABN = false
+        userSettings.opengames[param] = false
 						system.saveUserSettings()
       end
     else
       tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.windowABN = false
+        userSettings.opengames[param] = false
 						system.saveUserSettings()
       end
      tmp:addItem(lc.truee).onTouch = function()
-        userSettings.windowABN = true
+        userSettings.opengames[param] = true
 						system.saveUserSettings()
       end
     end
 		end
+end
+local function sampleParams()
+		local tmp = usualParams:addSubMenuItem(lc.overall)
+		colorItem(lc.cr1,'cr1',tmp)
+		colorItem(lc.cr2,'cr2',tmp)
+		colorItem(lc.cr3,'cr3',tmp)
+		colorItem(lc.cr4,'cr4',tmp)
+		colorItem(lc.windowColor,'windowColor',tmp)
+		colorItem(lc.windowTitleColor,'windowTitleColor',tmp)
+		standartItem(lc.windowTitle,'windowTitle',tmp)
+		numberItem(lc.windowWidth,'windowWidth',tmp)
+		numberItem(lc.windowHeight,'windowHeight',tmp)
+		chooseItem(lc.windowABN,'windowABN',tmp)
 		tmp:addItem(lc.reset).onTouch = function()
-				userSettings = {}
+				userSettings.opengames = nil
+				system.saveUserSettings()
+				userSettings.opengames = {}
 				system.saveUserSettings()
 		end
 		local tmp = usualParams:addSubMenuItem(lc.text)
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.textX) or '1'))
-			  tmpp.onInputFinished = function()
-			   userSettings.textX = tonumber(tmpp.text)
-						system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.textY) or '1'))
-			  tmpp.onInputFinished = function()
-			    userSettings.textY = tonumber(tmpp.text)
-						system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.textName) or 'Text'))
-			  tmpp.onInputFinished = function()
-			    userSettings.textName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.color).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.textColor == nil then userSettings.textColor = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.textColor or cr2, hts(userSettings.textColor) or hts(cr2)))
-			  tmpp.onColorSelected = function()
-			    userSettings.textColor = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.text).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.textText) or 'Text'))
-			  tmpp.onInputFinished = function()
-			    userSettings.textText = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
+		numberItem('X','textX',tmp)
+		numberItem('Y','textY',tmp)
+		standartItem(lc.name,'textName',tmp)
+		colorItem(lc.color,'textColor',tmp)
+		standartItem(lc.text,'textText',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.button)
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.buttonX) or '1'))
-			  tmpp.onInputFinished = function()
-			   userSettings.buttonX = tonumber(tmpp.text)
-						system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.buttonY) or '1'))
-			  tmpp.onInputFinished = function()
-			    userSettings.buttonY = tonumber(tmpp.text)
-						system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.buttonName) or 'Button'))
-			  tmpp.onInputFinished = function()
-			    userSettings.buttonName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.text).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.buttonText) or 'Text'))
-			  tmpp.onInputFinished = function()
-			    userSettings.buttonText = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.onTouch).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.buttonOnTouch) or 'Text'))
-			  tmpp.onInputFinished = function()
-			    userSettings.buttonOnTouch = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorbg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.buttonColorBG == nil then userSettings.buttonColorBG = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.buttonColorBG or cr1, hts(userSettings.buttonColorBG) or hts(cr1)))
-			  tmpp.onColorSelected = function()
-			    userSettings.buttonColorBG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorfg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.buttonColorFG == nil then userSettings.buttonColorFG = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.buttonColorFG or cr2, hts(userSettings.buttonColorFG) or hts(cr2)))
-			  tmpp.onColorSelected = function()
-			    userSettings.buttonColorFG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorbgp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.buttonColorBGP == nil then userSettings.buttonColorBGP = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.buttonColorBGP or cr2, hts(userSettings.buttonColorBGP) or hts(cr2)))
-			  tmpp.onColorSelected = function()
-			    userSettings.buttonColorBGP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorfgp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.buttonColorFGP == nil then userSettings.buttonColorFGP = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.buttonColorFGP or cr1, hts(userSettings.buttonColorFGP) or hts(cr1)))
-			  tmpp.onColorSelected = function()
-			    userSettings.buttonColorFGP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.animated).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2))
-    if userSettings.buttonAnimated == nil then userSettings.buttonAnimated = true end
-    if userSettings.buttonAnimated == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonAnimated = true
-						system.saveUserSettings()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonAnimated = false
-						system.saveUserSettings()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonAnimated = false
-						system.saveUserSettings()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonAnimated = true
-						system.saveUserSettings()
-      end
-    end
-		end
-		tmp:addItem(lc.disabled).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2))
-    if userSettings.buttonDisabled == nil then userSettings.buttonDisabled = true end
-    if userSettings.disbuttonDisabledabled == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonDisabled = true
-						system.saveUserSettings()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonDisabled = false
-						system.saveUserSettings()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonDisabled = false
-						system.saveUserSettings()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonDisabled = true
-						system.saveUserSettings()
-      end
-    end
-		end
-		tmp:addItem(lc.switch).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2))
-    if userSettings.buttonSwitchMode == nil then userSettings.buttonSwitchMode = true end
-    if userSettings.buttonSwitchMode == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonSwitchMode = true
-						system.saveUserSettings()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonSwitchMode = false
-						system.saveUserSettings()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.buttonSwitchMode = false
-						system.saveUserSettings()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        userSettings.buttonSwitchMode = true
-						system.saveUserSettings()
-      end
-    end
-		end
+		standartItem(lc.name,'buttonName',tmp)
+		numberItem('X','buttonX',tmp)
+		numberItem('Y','buttonY',tmp)
+		numberItem(lc.width,'buttonWidth',tmp)
+		numberItem(lc.heigth,'buttonHeight',tmp)
+		standartItem(lc.onTouch,'buttonOnTouch',tmp)
+		standartItem(lc.text,'buttonText',tmp)
+		colorItem(lc.colorbg,'buttonColorBG',tmp)
+		colorItem(lc.colorfg,'buttonColorFG',tmp)
+		colorItem(lc.colorbgp,'buttonColorBGP',tmp)
+		colorItem(lc.colorfgp,'buttonColorFGP',tmp)
+		chooseItem(lc.animated,'buttonAnimated',tmp)
+		chooseItem(lc.disabled,'buttonDisabled',tmp)
+		chooseItem(lc.switch,'buttonSwitchMode',tmp)
 		tmp:addItem(lc.mode).onTouch = function()
 			 local container = GUI.addBackgroundContainer(wk, true, true)
     local tmp = container.layout:addChild(GUI.comboBox(17, 15, 15, 1, cr1, cr2, cr1, cr2))
-    if userSettings.buttonMode == nil then userSettings.buttonMode = 'default' end
-    if userSettings.buttonPrevMode == nil then userSettings.buttonPrevMode = 'roundedButton' end
-    what = userSettings
+    if userSettings.opengames.buttonMode == nil then userSettings.opengames.buttonMode = 'default' end
+    if userSettings.opengames.buttonPrevMode == nil then userSettings.opengames.buttonPrevMode = 'roundedButton' end
+    what = userSettings.opengames
     if what.buttonMode== 'default' then
     		tmp:addItem(lc.default).onTouch = function()
     		  what.buttonMode = 'default'
@@ -2511,612 +2312,89 @@ local function sampleParams()
     end
 		end
 		local tmp = usualParams:addSubMenuItem(lc.image)
-		tmp:addItem(lc.image).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.imageImage)))
-			  tmpp.onInputFinished = function()
-			    userSettings.imageImage = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.imageName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.imageName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.imageX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.imageX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.imageY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.imageY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
+		standartItem(lc.name,'imageName',tmp)
+		numberItem('X','imageX',tmp)
+		numberItem('Y','imageY',tmp)
+		standartItem(lc.image,'imageImage',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.input)
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.heigth).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputHeight)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputHeight = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorbg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.inputColorBG == nil then userSettings.inputColorBG = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.inputColorBGP or cr2, hts(userSettings.inputColorBG)))
-			  tmpp.onColorSelected = function()
-			    userSettings.inputColorBG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end end
-		tmp:addItem(lc.colorfg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.inputColorFG == nil then userSettings.inputColorFG = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.inputColorFG, hts(userSettings.inputColorFG)))
-			  tmpp.onColorSelected = function()
-			    userSettings.inputColorFG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorph).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.inputColorPH == nil then userSettings.inputColorPH = 0x2D2D2D end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.inputColorPH, hts(userSettings.inputColorPH)))
-			  tmpp.onColorSelected = function()
-			    userSettings.inputColorPH = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorbgp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.inputColorBGP == nil then userSettings.inputColorBGP = cr4 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.inputColorBGP, hts(userSettings.inputColorBGP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.inputColorBGP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorfgp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.inputColorFGP == nil then userSettings.inputColorFGP = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.inputColorFGP, hts(userSettings.inputColorFGP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.inputColorFGP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.text).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputText)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputText = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.textph).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.inputTextPH)))
-			  tmpp.onInputFinished = function()
-			    userSettings.inputTextPH = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
+		standartItem(lc.name,'inputName',tmp)
+		numberItem('X','inputX',tmp)
+		numberItem('Y','inputY',tmp)
+		numberItem(lc.width,'inputWidth',tmp)
+		numberItem(lc.heigth,'inputHeight',tmp)
+		colorItem(lc.colorbg,'inputColorBG',tmp)
+		colorItem(lc.colorfg,'inputColorFG',tmp)
+		colorItem(lc.colorph,'inputColorPH',tmp)
+		colorItem(lc.colorbgp,'inputColorBGP',tmp)
+		colorItem(lc.colorfgp,'inputColorFGP',tmp)
+		standartItem(lc.text,'inputText',tmp)
+		standartItem(lc.ph,'inputTextPH',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.switch)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.switchName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.switchName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.state).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2, 1, cr1, cr2, cr1, cr2))
-    if userSettings.switchState == nil then userSettings.switchState = true end
-    if userSettings.switchState == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        userSettings.switchState = true
-						system.saveUserSettings()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.switchState = false
-						system.saveUserSettings()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        userSettings.switchState = false
-						system.saveUserSettings()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        userSettings.switchState = true
-						system.saveUserSettings()
-      end
-    end
-    end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.switchX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.switchX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.switchY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.switchY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.switchWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.switchWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.switchColorP == nil then userSettings.switchColorP = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorP, hts(userSettings.switchColorP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.switchColorP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colors).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.switchColorS == nil then userSettings.switchColorS = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorS, hts(userSettings.switchColorS)))
-			  tmpp.onColorSelected = function()
-			    userSettings.switchColorS = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colort).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.switchColorT == nil then userSettings.switchColorT = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorT, hts(userSettings.switchColorT)))
-			  tmpp.onColorSelected = function()
-			    userSettings.switchColorT = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
+		standartItem(lc.name,'switchName',tmp)
+		numberItem('X','switchX',tmp)
+		numberItem('Y','switchY',tmp)
+		numberItem(lc.width,'switchWidth',tmp)
+		chooseItem(lc.state,'switchState',tmp)
+		colorItem(lc.colorp,'switchColorP',tmp)
+		colorItem(lc.colors,'switchColorS',tmp)
+		colorItem(lc.colort,'switchColorT',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.panel)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.panelName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.panelName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.panelX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.panelX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.panelY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.panelY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.panelWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.panelWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.heigth).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.panelHeight)))
-			  tmpp.onInputFinished = function()
-			    userSettings.panelHeight = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colors).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.panelColor == nil then userSettings.panelColor = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.panelColor, hts(userSettings.panelColor)))
-			  tmpp.onColorSelected = function()
-			    userSettings.panelColor = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
+		standartItem(lc.name,'panelName',tmp)
+		numberItem('X','panelX',tmp)
+		numberItem('Y','panelY',tmp)
+		numberItem(lc.width,'panelWidth',tmp)
+		numberItem(lc.heigth,'panelHeight',tmp)
+		colorItem(lc.color,'panelColor',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.collorSelector)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.heigth).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csHeight)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csHeight = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.color).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.csColor == nil then userSettings.csColor = 0xFF00FF end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.csColor, hts(userSettings.csColor)))
-			  tmpp.onColorSelected = function()
-			    userSettings.csColor = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.text).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.csText)))
-			  tmpp.onInputFinished = function()
-			    userSettings.csText = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
+		standartItem(lc.name,'csName',tmp)
+		numberItem('X','csX',tmp)
+		numberItem('Y','csY',tmp)
+		numberItem(lc.width,'csWidth',tmp)
+		numberItem(lc.heigth,'csHeight',tmp)
+		colorItem(lc.color,'csColor',tmp)
+		standartItem(lc.text,'scText',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.slider)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.sliderColorP == nil then userSettings.sliderColorP = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.sliderColorP, hts(userSettings.sliderColorP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.sliderColorP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorpp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.sliderColorPP == nil then userSettings.sliderColorPP = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.sliderColorPP, hts(userSettings.sliderColorPP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.sliderColorPP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.sliderColorV == nil then userSettings.sliderColorV = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.sliderColorV, hts(userSettings.sliderColorV)))
-			  tmpp.onColorSelected = function()
-			    userSettings.sliderColorV = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.minv).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderMinv)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderMinv = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.maxv).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderMaxv)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderMaxv = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.value).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.sliderValue)))
-			  tmpp.onInputFinished = function()
-			    userSettings.sliderValue = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
+		standartItem(lc.name,'sliderName',tmp)
+		numberItem('X','sliderX',tmp)
+		numberItem('Y','sliderY',tmp)
+		numberItem(lc.width,'sliderWidth',tmp)
+		colorItem(lc.colorp,'sliderColorP',tmp)
+		colorItem(lc.colorpp,'sliderColorPP',tmp)
+		colorItem(lc.colorv,'sliderColorV',tmp)
+		numberItem(lc.minv,'sliderMinV',tmp)
+		numberItem(lc.maxv,'sliderMaxV',tmp)
+		numberItem(lc.value,'sliderValue',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.progressIndicator)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.piName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.piName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.piX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.piX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.piY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.piY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.piColorP == nil then userSettings.piColorP = cr3 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.piColorP, hts(userSettings.piColorP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.piColorP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorpa).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.piColorPA == nil then userSettings.piColorPA = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.piColorPS, hts(userSettings.piColorPA)))
-			  tmpp.onColorSelected = function()
-			    userSettings.piColorPA = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorv).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.piColorS == nil then userSettings.piColorV = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.piColorV, hts(userSettings.piColorV)))
-			  tmpp.onColorSelected = function()
-			    userSettings.piColorV = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
+		standartItem(lc.name,'piName',tmp)
+		numberItem('X','piX',tmp)
+		numberItem('Y','piY',tmp)
+		colorItem(lc.colorp,'piColorP',tmp)
+		colorItem(lc.colorpa,'piColorPA',tmp)
+		colorItem(lc.colorv,'piColorV',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.progressBar)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.progressBarName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.progressBarName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.progressBarX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.progressBarX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.progressBarY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.progressBarY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.progressBarWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.progressBarWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colorp).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.progressBarColorP == nil then userSettings.progressBarColorP = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorP, hts(userSettings.progressBarColorP)))
-			  tmpp.onColorSelected = function()
-			    userSettings.progressBarColorP = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colors).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.progressBarColorS == nil then userSettings.progressBarColorS = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorS, hts(userSettings.progressBarColorS)))
-			  tmpp.onColorSelected = function()
-			    userSettings.progressBarColorS = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorv).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.progresBarColorV == nil then userSettings.progressBarColorV = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.switchColorV, hts(userSettings.progressBarColorV)))
-			  tmpp.onColorSelected = function()
-			    userSettings.progressBarColorV = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.value).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.progressBarValue)))
-			  tmpp.onInputFinished = function()
-			    userSettings.progressBarValue = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
+		standartItem(lc.name,'progressBarName',tmp)
+		numberItem('X','progressBarX',tmp)
+		numberItem('Y','progressBarY',tmp)
+		numberItem(lc.width,'progressBarWidth',tmp)
+		colorItem(lc.colorp,'progressBarColorP',tmp)
+		colorItem(lc.colors,'progressBarColorS',tmp)
+		colorItem(lc.colorv,'progressBarColorV',tmp)
+		numberItem(lc.value,'progressBarValue',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.comboBox)
-		tmp:addItem(lc.name).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.comboBoxName)))
-			  tmpp.onInputFinished = function()
-			    userSettings.comboBoxName = tmpp.text
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('X').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.comboBoxX)))
-			  tmpp.onInputFinished = function()
-			    userSettings.comboBoxX = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem('Y').onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.comboBoxY)))
-			  tmpp.onInputFinished = function()
-			    userSettings.comboBoxY = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.width).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.comboBoxWidth)))
-			  tmpp.onInputFinished = function()
-			    userSettings.comboBoxWidth = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.elh).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  local tmpp = container.layout:addChild(GUI.input(1,1,30,3,cr1,cr2,cr3,cr1,cr2,tostring(userSettings.comboBoxELH)))
-			  tmpp.onInputFinished = function()
-			    userSettings.comboBoxELH = tonumber(tmpp.text)
-							system.saveUserSettings()
-			  end
-		end
-		tmp:addItem(lc.colort).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.comboBoxColorT == nil then userSettings.comboBoxColorT = cr1 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.comboBoxColorT, hts(userSettings.comboBoxColorT)))
-			  tmpp.onColorSelected = function()
-			    userSettings.comboBoxColorT = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorat).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.comboBoxColorAT == nil then userSettings.comboBoxColorAT = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.comboBoxColorAT, hts(userSettings.comboBoxColorAT)))
-			  tmpp.onColorSelected = function()
-			    userSettings.comboBoxColorAT = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorabg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.comboBoxColorABG == nil then userSettings.comboBoxColorABG = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.comboBoxColorABG, hts(userSettings.comboBoxColorABG)))
-			  tmpp.onColorSelected = function()
-			    userSettings.comboBoxColorABG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
-		tmp:addItem(lc.colorbg).onTouch = function()
-			  local container = GUI.addBackgroundContainer(wk, true, true)
-			  if userSettings.comboBoxColorBG == nil then userSettings.comboBoxColorBG = cr2 end
-			  local tmpp = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, userSettings.comboBoxColorBG, hts(userSettings.comboBoxColorBG)))
-			  tmpp.onColorSelected = function()
-			    userSettings.comboBoxColorBG = tonumber(tmpp.color)
-					 	system.saveUserSettings()
-			  end
-			end
+		standartItem(lc.name,'comboBoxName',tmp)
+		numberItem('X','comboBoxX',tmp)
+		numberItem('Y','comboBoxY',tmp)
+		numberItem(lc.width,'comboBoxWidth',tmp)
+		numberItem(lc.elh,'comboBoxELH',tmp)
+		colorItem(lc.colort,'comboBoxColorT',tmp)
+		colorItem(lc.colorat,'comboBoxColorAT',tmp)
+		colorItem(lc.colorabg,'comboBoxColorABG',tmp)
+		colorItem(lc.colorbg,'comboBoxColorBG',tmp)
+		local tmp = usualParams:addSubMenuItem(lc.script)
+		standartItem(lc.name,'scriptName',tmp)
+		chooseItem(lc.autoload,'scriptAutoload',tmp)
+		local tmp = usualParams:addSubMenuItem(lc.storage)
+		standartItem(lc.name,'storageName',tmp)
 end
 sampleParams()
 draw()
