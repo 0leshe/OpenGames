@@ -1,0 +1,13 @@
+{
+  open = 'Open',
+  close = 'Close',
+  path = 'Path',
+  browse = 'Browse',
+  application = 'Application path:',
+  applicationph = 'Enter application path here',
+  library = 'Library path:',
+  libraryph = 'Enter library path here',
+  install = 'Install!',
+  done = 'Done!',
+  exit = 'Exit'
+}
