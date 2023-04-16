@@ -14,4 +14,4 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Tell me on my discord, oleshe#9334. Describe anythoing what you know about it.
+Tell me on my discord, oleshe#9334. Describe anything what you know about it.
