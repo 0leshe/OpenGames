@@ -4,7 +4,6 @@ local system = require('system')
 local event = require('event')
 local image = require('image')
 local fs = require('filesystem')
-local OE = require('opengames')
 local compressor = require('compressor')
 local lc = system.getCurrentScriptLocalization()
 local userSettings = system.getUserSettings()
@@ -12,6 +11,7 @@ if not userSettings.opengames then
 		userSettings.opengames = {}
 		system.saveUserSettings()
 end
+local OE = require('opengames')
 gamepath = ''
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 treemode = 'screen'
@@ -1780,7 +1780,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,8,#lc.image/divide,1,cr1,cr2,cr1,cr2,lc.image))
   tmp.onTouch = function()
     choose:remove()
-    new(game.screen,{visible = true, type = 'image',x=userSettings.opengames.imageX or 1,y=userSettings.opengames.imageY or 1,image=userSettings.opengames.imageImage or 'StorageEl',name = userSettings.opengames.imageName or 'image',path = userSettings.opengames.imagePath or 'Script'})
+    new(game.screen,{visible = true, type = 'image',x=userSettings.opengames.imageX or 1,y=userSettings.opengames.imageY or 1,image=userSettings.opengames.imageImage or 'StorageEl',name = userSettings.opengames.imageName or 'image',path = userSettings.opengames.imagePath or '/MineOS/Icons/HDD.pic'})
   end
   local tmp = choose:addChild(GUI.button(6,6,#lc.button/divide,1,cr1,cr2,cr1,cr2,lc.button))
   tmp.onTouch = function()
@@ -2090,6 +2090,7 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 		  		tmpgame.screen.buffer[i].raw = nil
 		  		tmpgame.screen.buffer[i].visible = false
 		  end
+		  tmpgame.screen.buffer.window.abn = false
 		  towrite = towrite .. 'draw()\n for i = 1,#game.scripts do\n if game.scripts[i].autoload == true then\n system.execute(game.scripts[i].path)\n end\n end\n'
 		  fs.write(path..'.app/Main.lua',towrite)
 		  fs.writeTable(path..'.app/Game.dat',tmpgame)
