@@ -1,9 +1,19 @@
-local opengames = {}
+local opengames = {Instance={}}
 local GUI = require('GUI')
 local image = require('Image')
 local system = require('System')
 local fs = require('filesystem')
-
+local userSettings = system.getUserSettings()
+local function new(where,what)
+  table.insert(where,what)
+  for i = 1,#where do
+    if where[i].name == what.name and where[i].type == what.type and where[i].x == what.x and where[i].y == what.y then
+      drawparams(where[i])
+    end
+  end
+  drawtree()
+  draw()
+end
 function opengames.init(params)
 		opengames.isEditor = params.editor or false
 		opengames.useImages = params.useImages or true
@@ -22,7 +32,32 @@ function opengames.init(params)
 		opengames.game = params.game
 		opengames.container = params.container
 end
-
+function opengames.Instance.new(...)
+   local args = {...}
+  if args[1] == 'panel' then
+    new(game.screen,{visible = args[8],type = 'panel',x=args[3],y= args[4],color= args[7],width = args[5],height= args[6],name =  args[2]})
+  elseif args[1] == 'text' then
+    new(game.screen,{visible =args[7],type = 'text',x= args[3],y=args[4],color=args[5],text=args[6],name = args[2]})
+  elseif args[1] == 'progressBar' then
+    new(game.screen,{visible = args[9],width= args[4],colorp = args[5],colors=args[6],colorv=args[7],type = 'progressBar',x=args[3],y=args[4],color= cr1,value=args[8],name = args[2]})
+  elseif args[1] == 'comboBox' then
+    new(game.screen,{visible = true,type = 'comboBox',width=userSettings.opengames.comboBoxWidth or 20,x=userSettings.opengames.comboBoxX or 1,y=userSettings.opengames.comboBoxY or 1,elh=userSettings.opengames.comboBoxELH or 3,items={{name=userSettings.opengames.comboBoxItemsName or 'Item',active = false,type='itemComboBox',path=''}},colorbg=userSettings.opengames.comboBoxColorBG or cr1,colort=userSettings.opengames.comboBoxColorT or cr2,colorabg=userSettings.opengames.comboBoxColorABG or cr1,colorat=userSettings.opengames.comboBoxColorAT or cr2,name = userSettings.opengames.comboBoxName or 'ComboBox'})
+  elseif args[1] == 'slider' then
+    new(game.screen,{visible = true,type = 'slider',x=userSettings.opengames.sliderX or 1,y=userSettings.opengames.sliderY or 1,width=userSettings.opengames.sliderWidth or 20,colorp=userSettings.sliderColorP or cr1,colors=userSettings.opengames.sliderColorS or cr2,colorpp=userSettings.opengames.sliderColorPP or cr1,colorv=userSettings.opengames.sliderColorV or cr2,minv=userSettings.opengames.sliderMinv or 1,maxv=userSettings.opengames.sliderMaxv or 100,value=userSettings.opengames.sliderValue or 50,text=userSettings.opengames.sliderText or 'Slider',name = userSettings.opengames.sliderName or 'Slider'})
+  elseif args[1] == 'progressIndicator' then
+    new(game.screen,{visible = true,type = 'progressIndicator',x=userSettings.opengames.piX or 1,y=userSettings.opengames.piY or 1,active=userSettings.opengames.piActive or false,rollStage=userSettings.opengames.piRollStage or 1,colorp= userSettings.opengames.piColorP or cr1,colors=userSettings.opengames.piColorS or cr2,colorpa=userSettings.opengames.piColorPA or cr3,name = userSettings.opengames.piName or 'pI'})
+  elseif args[1] == 'colorSelector' then
+    new(game.screen,{visible = true,path='',type = 'colorSelector',color=userSettings.opengames.csColor or 0xFF00FF,x=userSettings.opengames.csX or 1,y=userSettings.opengames.csY or 1,width=userSettings.opengames.csWidth or 20,height=userSettings.opengames.csHeight or 3,text=userSettings.opengames.csText or 'Color Selector',name = userSettings.opengames.csName or 'ColorSelector'})
+  elseif args[1] == 'input' then
+    new(game.screen,{visible = true,onInputEnded = '',width=userSettings.opengames.inputWidth or 20,height=userSettings.opengames.inputHeight or 3,colorbg = userSettings.opengames.inputColorBG or cr1,colorfg = userSettings.opengames.inputColorFG or cr2,colorfgp = userSettings.opengames.inputColorFGP or cr1,colorbgp = userSettings.opengames.inputColorBGP or cr4,colorph=userSettings.opengames.inputColorPH or 0x2D2D2D,type = 'input',x=userSettings.opengames.inputX or 1,y=userSettings.opengames.inputY or 1,name = userSettings.opengames.inputName or 'Input',text = userSettings.opengames.inputText or 'Input',textph = userSettings.opengames.inputTextPH or 'Text'})
+  elseif args[1] == 'switch' then
+    new(game.screen,{onStateChanged = userSettings.opengames.switchOnStateChanged or '', visible =userSettings.opengames.switchVisible or true,state=userSettings.opengames.switchState or false,type = 'switch',x=userSettings.opengames.switchX or 1,y=userSettings.opengames.switchY or 1,width=userSettings.switchWidth or 8,colorp= userSettings.opengames.switchColorP or cr2, colors=userSettings.opengames.switchColorS or cr2,colorpp=userSettings.opengames.switchColorPP or cr1,name = userSettings.opengames.switchName or 'Switch'})
+  elseif args[1] == 'button' then
+    new(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, prevMode = 'roundedButton', switchMode = args[15] or false, mode = args[13] or 'default', type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
+  elseif args[1] == 'image' then
+    new(game.screen,{visible = true, type = 'image',x=userSettings.opengames.imageX or 1,y=userSettings.opengames.imageY or 1,image=userSettings.opengames.imageImage or 'StorageEl',name = userSettings.opengames.imageName or 'image',path = userSettings.opengames.imagePath or '/MineOS/Icons/HDD.pic'})
+  end
+end
 function table.copy (originalTable)
  local copyTable = {}
   for k,v in pairs(originalTable) do
@@ -77,7 +112,13 @@ function draw()
 		end
 		if game.window.abn ~= getBW('abn') then
 				if game.window.abn == true then
-						ABN = screen:addChild(GUI.actionButtons(1,1,false))
+						ABN = screen:addChild(GUI.actionButtons(2,2,false))
+						ABN.close.onTouch = function()
+								screen:remove()
+						end
+						ABN.minimize.onTouch = function()
+								screen:minimize()
+						end
 				else
 						ABN:remove()
 				end
@@ -90,15 +131,23 @@ function draw()
 							game.screen.buffer[i] = {visible = false}
 					end
 					if game.screen[i].text then
-							if game.screen[i].text == '{loc}' and game.localization[game.screen[i].name..'_ph'] and opengames.isEditor == false  or game.screen[i].text == '{localization}' and game.localization[game.screen[i].name] and opengames.isEditor == false then
-									text = game.localization[game.screen[i].name]
+							local tbl = {}
+							for part in string.gmatch(game.screen[i].text,"[^ ]+") do
+							  table.insert(tbl, part)
+							end
+							if tbl[1] == '{loc}' or tbl[1] == '{localization}' then
+									text = game.localization[tbl[2]]
 							else
 									text = game.screen[i].text
 							end
 					end
 					if game.screen[i].textph then
-							if game.screen[i].textph == '{loc}' and game.localization[game.screen[i].name..'_ph'] and opengames.isEditor == false  or game.screen[i].textph == '{localization}' and game.localization[game.screen[i].name..'_ph'] and opengames.isEditor == false then
-									textph = game.localization[game.screen[i].name..'_ph']
+							local tbl = {}
+							for part in string.gmatch(game.screen[i].textph,"[^ ]+") do
+							  table.insert(tbl, part)
+							end
+							if tbl[1] == '{loc}' or tbl[1] == '{localization}' then
+									textph = game.localization[tbl[2]]
 							else
 									textph = game.screen[i].textph
 							end
@@ -236,6 +285,7 @@ function draw()
 											game.screen[i].raw = tmp
 											getR(i).index = i
 											getR(i).onInputFinished = function(_,tmp)
+													game.screen[tmp.index].text = tmp.text
 													if opengames.isEditor == true then
 															game.screen[tmp.index].text = tmp.text
 															drawparams(game.screen[tmp.index])
@@ -290,6 +340,7 @@ function draw()
 											game.screen[i].raw = tmp
 											getR(i).index = i
 											getR(i).onStateChanged = function(tmp)
+										 		game.screen[tmp.index].state = tmp.state
 													if opengames.isEditor == true then
 										 				game.screen[tmp.index].state = tmp.state
 											 			drawparams(game.screen[tmp.index])
@@ -394,6 +445,7 @@ function draw()
 											game.screen[i].raw = tmp
 											getR(i).index = i
 											getR(i).onValueChanged = function(_,tmp)
+											  game.screen[tmp.index].value = tmp.value
 													if opengames.isEditor == true then
 													  game.screen[tmp.index].value = tmp.value
 													  drawparams(game.screen[tmp.index])
