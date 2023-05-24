@@ -3,17 +3,9 @@ local GUI = require('GUI')
 local image = require('Image')
 local system = require('System')
 local fs = require('filesystem')
+local computer = require("computer")
+local eventObject
 local userSettings = system.getUserSettings()
-local function new(where,what)
-  table.insert(where,what)
-  for i = 1,#where do
-    if where[i].name == what.name and where[i].type == what.type and where[i].x == what.x and where[i].y == what.y then
-      drawparams(where[i])
-    end
-  end
-  drawtree()
-  draw()
-end
 function opengames.init(params)
 		opengames.isEditor = params.editor or false
 		opengames.useImages = params.useImages or true
@@ -31,32 +23,68 @@ function opengames.init(params)
 		opengames.gamepath = params.gamePath
 		opengames.game = params.game
 		opengames.container = params.container
+		eventObject = opengames.container:addChild(GUI.object(1,1,1,1))
+		eventObject.scripts = {} -- {time_started, prev_call, time_end, interval, callback}
+		eventObject.opengames = opengames
+		eventObject.eventHandler = function(_,object,...)
+		  local computer = require('computer')
+		  for i = 1, #object.scripts do
+		    if computer.uptime() > object.scripts[i].prev_call+object.scripts[i].interval then
+		      object.scripts[i].prev_call = computer.uptime()
+		      object.scripts[i].callback({...},object.opengames)
+		    end
+		    if object.scripts[i].time_end < computer.uptime() then
+		      if object.scripts[i].time_end < 0 then
+		        object.scripts[i] = nil
+		      end
+		    end
+		  end
+		end
 end
 function opengames.Instance.new(...)
    local args = {...}
+   local game = opengames.game
   if args[1] == 'panel' then
-    new(game.screen,{visible = args[8],type = 'panel',x=args[3],y= args[4],color= args[7],width = args[5],height= args[6],name =  args[2]})
+    table.insert(game.screen,{visible = args[8],type = 'panel',x=args[3],y= args[4],color= args[7],width = args[5],height= args[6],name =  args[2]})
   elseif args[1] == 'text' then
-    new(game.screen,{visible =args[7],type = 'text',x= args[3],y=args[4],color=args[5],text=args[6],name = args[2]})
+    table.insert(game.screen,{visible =args[7],type = 'text',x= args[3],y=args[4],color=args[5],text=args[6],name = args[2]})
   elseif args[1] == 'progressBar' then
-    new(game.screen,{visible = args[9],width= args[4],colorp = args[5],colors=args[6],colorv=args[7],type = 'progressBar',x=args[3],y=args[4],color= cr1,value=args[8],name = args[2]})
+    table.insert(game.screen,{visible = args[10],width= args[5],colorp = args[6],colors=args[7],colorv=args[8],type = 'progressBar',x=args[3],y=args[4],color=args[6],value=args[9],name = args[2]})
   elseif args[1] == 'comboBox' then
-    new(game.screen,{visible = true,type = 'comboBox',width=userSettings.opengames.comboBoxWidth or 20,x=userSettings.opengames.comboBoxX or 1,y=userSettings.opengames.comboBoxY or 1,elh=userSettings.opengames.comboBoxELH or 3,items={{name=userSettings.opengames.comboBoxItemsName or 'Item',active = false,type='itemComboBox',path=''}},colorbg=userSettings.opengames.comboBoxColorBG or cr1,colort=userSettings.opengames.comboBoxColorT or cr2,colorabg=userSettings.opengames.comboBoxColorABG or cr1,colorat=userSettings.opengames.comboBoxColorAT or cr2,name = userSettings.opengames.comboBoxName or 'ComboBox'})
+    table.insert(game.screen,{visible = args[11],type = 'comboBox',width=args[5],x=args[3],y=args[4] or 1,elh=args[6],items=args[12] or {},colorbg=args[7],colort=args[8],colorabg=args[9],colorat=args[10],name=args[2]})
   elseif args[1] == 'slider' then
-    new(game.screen,{visible = true,type = 'slider',x=userSettings.opengames.sliderX or 1,y=userSettings.opengames.sliderY or 1,width=userSettings.opengames.sliderWidth or 20,colorp=userSettings.sliderColorP or cr1,colors=userSettings.opengames.sliderColorS or cr2,colorpp=userSettings.opengames.sliderColorPP or cr1,colorv=userSettings.opengames.sliderColorV or cr2,minv=userSettings.opengames.sliderMinv or 1,maxv=userSettings.opengames.sliderMaxv or 100,value=userSettings.opengames.sliderValue or 50,text=userSettings.opengames.sliderText or 'Slider',name = userSettings.opengames.sliderName or 'Slider'})
+    table.insert(game.screen,{visible = args[13],type = 'slider',path=args[12],x=args[3],y=args[4],width=args[5],colorp=args[6],colorpp=args[7],colorv=args[8],minv=args[9],maxv=args[10],value=args[11], name = args[2]})
   elseif args[1] == 'progressIndicator' then
-    new(game.screen,{visible = true,type = 'progressIndicator',x=userSettings.opengames.piX or 1,y=userSettings.opengames.piY or 1,active=userSettings.opengames.piActive or false,rollStage=userSettings.opengames.piRollStage or 1,colorp= userSettings.opengames.piColorP or cr1,colors=userSettings.opengames.piColorS or cr2,colorpa=userSettings.opengames.piColorPA or cr3,name = userSettings.opengames.piName or 'pI'})
+    table.insert(game.screen,{visible = args[8],type = 'progressIndicator',x=args[3],y=args[4],active=userSettings.opengames.piActive or false,rollStage=userSettings.opengames.piRollStage or 1,colorp= args[6],colors=args[7],colorpa=args[5],name = args[2]})
   elseif args[1] == 'colorSelector' then
-    new(game.screen,{visible = true,path='',type = 'colorSelector',color=userSettings.opengames.csColor or 0xFF00FF,x=userSettings.opengames.csX or 1,y=userSettings.opengames.csY or 1,width=userSettings.opengames.csWidth or 20,height=userSettings.opengames.csHeight or 3,text=userSettings.opengames.csText or 'Color Selector',name = userSettings.opengames.csName or 'ColorSelector'})
+    table.insert(game.screen,{visible = args[10],path=args[9],type = 'colorSelector',color=args[7],x=args[3],y=args[4],width=args[5],height=args[6],text=args[8],name = args[2]})
   elseif args[1] == 'input' then
-    new(game.screen,{visible = true,onInputEnded = '',width=userSettings.opengames.inputWidth or 20,height=userSettings.opengames.inputHeight or 3,colorbg = userSettings.opengames.inputColorBG or cr1,colorfg = userSettings.opengames.inputColorFG or cr2,colorfgp = userSettings.opengames.inputColorFGP or cr1,colorbgp = userSettings.opengames.inputColorBGP or cr4,colorph=userSettings.opengames.inputColorPH or 0x2D2D2D,type = 'input',x=userSettings.opengames.inputX or 1,y=userSettings.opengames.inputY or 1,name = userSettings.opengames.inputName or 'Input',text = userSettings.opengames.inputText or 'Input',textph = userSettings.opengames.inputTextPH or 'Text'})
+    table.insert(game.screen,{visible = args[15],onInputEnded = args[14],width=args[5],height=args[6],colorbg = args[9],colorfg = args[10],colorfgp = args[12],colorbgp = args[11],colorph=args[13],type = 'input',x=args[3],y=args[4],name = args[2],text = args[7],textph = args[8]})
   elseif args[1] == 'switch' then
-    new(game.screen,{onStateChanged = userSettings.opengames.switchOnStateChanged or '', visible =userSettings.opengames.switchVisible or true,state=userSettings.opengames.switchState or false,type = 'switch',x=userSettings.opengames.switchX or 1,y=userSettings.opengames.switchY or 1,width=userSettings.switchWidth or 8,colorp= userSettings.opengames.switchColorP or cr2, colors=userSettings.opengames.switchColorS or cr2,colorpp=userSettings.opengames.switchColorPP or cr1,name = userSettings.opengames.switchName or 'Switch'})
+    table.insert(game.screen,{onStateChanged = args[9], visible =args[11],state=args[10],type = 'switch',x=args[3],y=args[4],width=args[5],colorp=args[6], colors=args[7],colorpp=args[8],name = args[2]})
   elseif args[1] == 'button' then
-    new(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, prevMode = 'roundedButton', switchMode = args[15] or false, mode = args[13] or 'default', type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
+    table.insert(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, prevMode = 'roundedButton', switchMode = args[15] or false, mode = args[13] or 'default', type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
   elseif args[1] == 'image' then
-    new(game.screen,{visible = true, type = 'image',x=userSettings.opengames.imageX or 1,y=userSettings.opengames.imageY or 1,image=userSettings.opengames.imageImage or 'StorageEl',name = userSettings.opengames.imageName or 'image',path = userSettings.opengames.imagePath or '/MineOS/Icons/HDD.pic'})
+    table.insert(game.screen,{visible = args[6], type = 'image',x=args[3],y=args[4],image=args[5],name = args[2]})
   end
+end
+function opengames.Instance.remove(thing)
+		if type(thing) == 'number' then
+		  if not opengames.game.screen[thing] then return false end
+		  opengames.game.screen[thing].raw:remove()
+		  opengames.game.screen[thing] = nil
+		  opengames.game.screen.buffer[thing] = nil
+		elseif type(thing) == 'string' then
+				_,thing = opengames.find(thing)
+		  if not opengames.game.screen[thing] then return false end
+		  opengames.game.screen[thing].raw:remove()
+		  opengames.game.screen[thing] = nil
+		  opengames.game.screen.buffer[thing] = nil
+		elseif type(thing) == 'table' then
+		  if not thing then return false end
+		  thing.raw:remove()
+		  thing = nil
+		end
 end
 function table.copy (originalTable)
  local copyTable = {}
@@ -90,12 +118,13 @@ local function getBW(name)
 		local game = opengames.game
 		return game.screen.buffer.window[name]
 end
-function draw()
+function opengames.draw()
 		local game = opengames.game
 		local screen = opengames.container
 		local gamepath = opengames.gamepath
 		if game.window.width ~= getBW('width') then
 				BG.width = game.window.width
+				TITLE.localX = math.floor(game.window.width/2-string.len(game.window.title)/1.5/2)
 		end
 		if game.window.height ~= getBW('height') then
 				BG.height = game.window.height
@@ -105,14 +134,14 @@ function draw()
 		end
 		if game.window.title ~= getBW('title') then
 				TITLE.text = game.window.title
-				TITLE.localX = math.floor(game.window.width/2-#game.window.title/2)
+				TITLE.localX = math.floor(game.window.width/2-string.len(game.window.title)/1.5/2)
 		end
 		if game.window.titleColor ~= getBW('titleColor') then
 				TITLE.color = game.window.titleColor
 		end
 		if game.window.abn ~= getBW('abn') then
 				if game.window.abn == true then
-						ABN = screen:addChild(GUI.actionButtons(2,2,false))
+						ABN = screen:addChild(GUI.actionButtons(2,1,false))
 						ABN.close.onTouch = function()
 								screen:remove()
 						end
@@ -193,7 +222,7 @@ function draw()
 											if opengames.isEditor == false then
 													getR(i).onTouch = function(_,tmp) 
 															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch,tmp.index)
+							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch,tmp.index,opengames)
 															end
 													end
 											end
@@ -276,7 +305,7 @@ function draw()
 	        end
 			      if idk == nil then idk = '/Icons/Script.pic' end
 	        getR(i).image = image.load(idk)
-							end
+				  	end
 					end
 					if getS(i,'type') == 'input' then
 							if getS(i,'visible') ~= getB(i,'visible') then
@@ -291,7 +320,7 @@ function draw()
 															drawparams(game.screen[tmp.index])
 													else
 															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onInputEnded) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onInputEnded,tmp.index)
+							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onInputEnded,tmp.index,opengames)
 															end
 													end
 											end
@@ -347,7 +376,7 @@ function draw()
 													else
 										 				game.screen[tmp.index].state = tmp.state
 															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onStateChanged) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onStateChanged,tmp.index)
+							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onStateChanged,tmp.index,opengames)
 															end
 													end
 											end
@@ -409,10 +438,13 @@ function draw()
 											game.screen[i].raw = tmp
 											getR(i).index = i
 											getR(i).onColorSelected = function(_,tmp)
+													game.screen[tmp.index].color = tmp.color
 													if opengames.isEditor == false then
 															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].path) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index)
+							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index,opengames)
 															end
+													else
+															drawparams(game.screen[tmp.index])
 											  end
 											end
 									else
@@ -451,7 +483,7 @@ function draw()
 													  drawparams(game.screen[tmp.index])
 											  else
 															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].path) then
-																	system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index)
+																	system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index,opengames)
 															end
 											  end
 											end
@@ -618,10 +650,72 @@ function draw()
 				game.screen.buffer[i] = table.copy(game.screen[i])
 		end
 end
-function find(where,what)
+function opengames.getObject(index)
+		if type(index) == 'number' then
+				return opengames.game.screen[index]
+		elseif type(index) == 'string' or type(index) == 'table' then
+		  object,_ = opengames.find(opengames.game.screen,index)
+		  return object
+		end
+end
+function opengames.getScript(index)
+		if type(index) == 'number' then
+				return opengames.game.scripts[index]
+		elseif type(index) == 'string' or type(index) == 'table' then
+		  object,_ = opengames.find(opengames.game.scripts,index)
+		  return object
+		end
+end
+function opengames.getStorageEl(index)
+		if type(index) == 'number' then
+				return opengames.game.storage[index]
+		elseif type(index) == 'string' or type(index) == 'table' then
+		  object,_ = opengames.find(opengames.game.storage,index)
+		  return object
+		end
+end
+function opengames.getStorage()
+  return opengames.game.storage
+end
+function opengames.getScreen()
+  return opengames.game.screen
+end
+function opengames.getScripts()
+  return opengames.game.scripts
+end
+function opengames.getLocalization(index)
+  if index then
+    return opengames.game.localization[index]
+  else
+    return opengames.game.localization
+  end
+end
+function opengames.regScript(script,mode,interval,endtime,name)
+  local callback
+  if mode == 'execute' then
+    callback = load(fs.read(gamepath..'/Scripts/'..opengames.getScript(script).path))
+  elseif mode == 'string' then
+     callback = load(script)
+   elseif mode == 'function' then
+     callback = script
+  end
+  if callback then
+    table.insert(eventObject.scripts,{time_started = computer.uptime(), prev_call = computer.uptime(), interval = interval,callback = callback, name = name, time_end = computer.uptime()+endtime})
+  else
+    return false
+  end
+  return true
+end
+function opengames.unregScript(name)
+  local result,_ = find(eventObject.scripts,name)
+  result = nil
+end
+function opengames.find(where,what)
 		for i = 1, #where do
-				if where[i].name == what then
+				if where[i].name == what and type(what) == 'string' then
 						return where[i], i
+				elseif where[i] == what and type(what) == 'table' then
+				  return i
 				end
 		end
 end
