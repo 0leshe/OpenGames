@@ -25,7 +25,7 @@ local function changePosition(idk,fromposition,toposition)
   		game.screen[fromposition].raw:moveBackward()
  	end
 end
-local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.3'))
+local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.4'))
 local screen = win:addChild(GUI.container(2,3,160,50))
 BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.heigth,game.window.color))
 TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
