@@ -12,12 +12,16 @@ if not userSettings.opengames then
 		system.saveUserSettings()
 end
 local OE = require('opengames')
-gamepath = ''
+local gamepath = ''
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
-treemode = 'screen'
-game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {window={}}},storage={}}
+local treemode = 'screen'
+local game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {window={}}},storage={buffer={}}}
+		if require'imageAtlas' then
+		  imageAtlas = require'imageAtlas'
+		  isImageAtlas = true
+		end
 
-wk,win,menu = system.addWindow(GUI.filledWindow(0,0,160,50,0x8E8E8E))
+local wk,win,menu = system.addWindow(GUI.filledWindow(0,0,160,50,0x8E8E8E))
 local function changePosition(idk,fromposition,toposition)
 		if idk == true then
   		game.screen[fromposition].raw:moveForward()
@@ -25,13 +29,13 @@ local function changePosition(idk,fromposition,toposition)
   		game.screen[fromposition].raw:moveBackward()
  	end
 end
-local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.4'))
+local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.5'))
 local screen = win:addChild(GUI.container(2,3,160,50))
-BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.heigth,game.window.color))
-TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
+local BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color))
+local TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
 local params = win:addChild(GUI.filledWindow(102,24,40,23,cr1))
 local obj = win:addChild(GUI.filledWindow(102,2,36,20,cr1))
-OE.init({editor = true,game = game,container = screen})
+OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
 
 function hts(...)
   return ("0x%06X"):format(...)
@@ -48,18 +52,11 @@ end
 function bx(...)
   return params:addChild(GUI.comboBox(...))
 end
-function del() 
-  for i = 1,#game.screen do
-    if what == game.screen[i] then
-    game.screen[i].raw:remove()
-    table.remove(game.screen,i) 
-    table.remove(game.screen.buffer,i) 
-    break 
-    end 
-  end 
+function del()
+  OE.Instance.remove(what)
 		OE.draw() 
 		drawtree() 
-		drawparams(game.screen[1]) 
+		drawparams(game.screen[1])
 end
 function drawparams(whatt)
   what = whatt
@@ -1689,6 +1686,98 @@ end
         OE.draw()
       end
     end
+  elseif what.type == 'animation' then
+    tt(3,3,cr2,lc.type..': '..what.type)
+    tt(3,4,cr2,lc.name)
+    tt(3,5,cr2,'X')
+    tt(3,6,cr2,'Y')
+    tt(3,7,cr2,lc.atlas)
+    tt(3,8,cr2,lc.nextFrame)
+    tt(3,9,cr2,lc.playAnimation)
+    tt(3,10,cr2,lc.visible)
+    tt(3,11,cr2,lc.delete)
+    tt(3,12,cr2,lc.up)
+    tt(3,13,cr2,lc.down)
+    local tmp = params:addChild(GUI.filesystemChooser(17, 7, 20, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.change, "/"))
+    tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+    tmp.onSubmit = function(path)
+      what.stage = 0
+      what.atlas = require('imageAtlas').init(path,string.gsub(path,'atlas.pic','config.cfg'))
+      what:tick()
+    end
+    local tmp = bn(18,9,#lc.play/divide,1,cr1,cr2,cr1,cr2,lc.play)
+    tmp.onTouch = function(_,object)
+      OE.playAnimation(what,1)
+    end
+    local tmp = bn(18,8,#lc.frame/divide+2+#tostring(what.stage),1,cr1,cr2,cr1,cr2,lc.frame.. ': ' .. what.stage)
+    tmp.onTouch = function(_,object)
+      what:tick()
+      object.text = lc.frame .. ': ' .. what.stage
+      object.width = #lc.frame/divide+2+#tostring(what.stage)
+    end
+    local tmp = bn(17,12,6,1,cr1,cr2,cr1,cr2,lc.up)
+    tmp.onTouch = function()
+      for i = 1,#game.screen do
+        if game.screen[i] == what then
+          changePosition(true,i,i-1)
+          OE.draw()
+          drawtree()
+          break
+        end
+      end
+    end
+    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.down)
+    tmp.onTouch  = function()
+      for i = 1,#game.screen do
+        if game.screen[i] == what then
+          changePosition(false,i,i+1)
+          OE.draw()
+          drawtree()
+          break
+        end
+      end
+    end
+    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
+    tmp.onInputFinished = function()
+      what.name = tmp.text
+      drawtree()
+    end
+    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
+    tmp.onInputFinished = function()
+    		if tmp.text ~= '' then
+      what.x = tonumber(tmp.text)
+      OE.draw()
+      end
+    end
+    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
+    tmp.onInputFinished = function()
+    		if tmp.text ~= '' then
+      what.y = tonumber(tmp.text)
+      OE.draw()
+      end
+    end
+    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.delete)
+    tmp.onTouch = del
+    local tmp = bx(17, 10, 5, 1,cr1, cr2, cr1, cr2)
+    if what.visible == true then
+      tmp:addItem(lc.truee).onTouch = function()
+        what.visible = true
+        OE.draw()
+      end
+      tmp:addItem(lc.falsee).onTouch = function()
+        what.visible = false
+        OE.draw()
+      end
+    else
+      tmp:addItem(lc.falsee).onTouch = function()
+        what.visible = false
+        OE.draw()
+      end
+     tmp:addItem(lc.truee).onTouch = function()
+        what.visible = true
+        OE.draw()
+      end
+    end
   elseif what.type == 'file' then
     tt(3,3,cr2,lc.type..': '..what.type)
     tt(3,4,cr2,lc.name)
@@ -1698,13 +1787,9 @@ end
     tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
     tmp.onSubmit = function(path)
       what.path = path
+      OE.draw()
       drawtree()
       drawparams(what)
-      local tmp = find(game.screen.buffer,what.name)
-      if tmp then
-      		tmp.buffer.visible = false
-      end
-      OE.draw()
     end
     local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
     tmp.onInputFinished = function()
@@ -1775,7 +1860,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(25,4,#lc.progressIndicator/divide,1,cr1,cr2,cr1,cr2,lc.progressIndicator))
   tmp.onTouch = function()
     choose:remove()
-    OE.Instance.new('progressIndicator',userSettings.opengames.piName or 'progressIndicator',userSettings.opengames.piX or 1,userSettings.opengames.piY or 1,userSettings.opengames.piColorPA or cr3,userSettings.opengames.piColorP or cr1,userSettings.opengames.piColorS or cr2,true)
+    OE.Instance.new('progressIndicator',userSettings.opengames.piName or 'ProgressIndicator',userSettings.opengames.piX or 1,userSettings.opengames.piY or 1,userSettings.opengames.piColorPA or cr3,userSettings.opengames.piColorP or cr1,userSettings.opengames.piColorS or cr2,true)
     OE.draw()
     drawtree()
     drawparams(game.screen[#game.screen])
@@ -1807,7 +1892,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,8,#lc.image/divide,1,cr1,cr2,cr1,cr2,lc.image))
   tmp.onTouch = function()
     choose:remove()
-    OE.Instance.new('image',userSettings.opengames.imageName or 'image',userSettings.opengames.imageX or 1,userSettings.opengames.imageY or 1,userSettings.opengames.imageImage or 'StorageEl',true)
+    OE.Instance.new('image',userSettings.opengames.imageName or 'Image',userSettings.opengames.imageX or 1,userSettings.opengames.imageY or 1,userSettings.opengames.imageImage or 'StorageEl',true)
     OE.draw()
     drawtree()
     drawparams(game.screen[#game.screen])
@@ -1815,17 +1900,27 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,6,#lc.button/divide,1,cr1,cr2,cr1,cr2,lc.button))
   tmp.onTouch = function()
     choose:remove()
-    OE.Instance.new('button',userSettings.opengames.buttonName or 'button',userSettings.opengames.buttonX or 1,userSettings.opengames.buttonY or 1,userSettings.opengames.buttonWidth or 20,userSettings.opengames.buttonHeight or 3,userSettings.opengames.buttonText or 'Hello world!',userSettings.opengames.buttonColorBG or cr1,userSettings.opengames.buttonColorFG or cr2,userSettings.opengames.buttonColorBGP or cr2,userSettings.opengames.buttonColorFGP or cr1,userSettings.opengames.buttonOnTouch or '', userSettings.opengames.buttonMode or 'default',userSettings.opengames.buttonAnimated or true, userSettings.opengames.buttonSwitchMode or false,userSettings.opengames.buttonDisabled or false,true)
+    OE.Instance.new('button',userSettings.opengames.buttonName or 'Button',userSettings.opengames.buttonX or 1,userSettings.opengames.buttonY or 1,userSettings.opengames.buttonWidth or 20,userSettings.opengames.buttonHeight or 3,userSettings.opengames.buttonText or 'Hello world!',userSettings.opengames.buttonColorBG or cr1,userSettings.opengames.buttonColorFG or cr2,userSettings.opengames.buttonColorBGP or cr2,userSettings.opengames.buttonColorFGP or cr1,userSettings.opengames.buttonOnTouch or '', userSettings.opengames.buttonMode or 'default',userSettings.opengames.buttonAnimated or true, userSettings.opengames.buttonSwitchMode or false,userSettings.opengames.buttonDisabled or false,true)
     OE.draw()
     drawtree()
     drawparams(game.screen[#game.screen])
+  end
+  if OE.imageAtlas then
+    local tmp = choose:addChild(GUI.filesystemChooser(23, 10, #lc.animation/divide+10, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.animation, "/"))
+    tmp.onSubmit = function(path)
+      choose:remove()
+      OE.Instance.new('animation','Animation Object',1,1,path,string.gsub(path,'atlas.pic','config.cfg'),true)
+      OE.draw()
+      drawtree()
+      drawparams(game.screen[#game.screen])
+   end
   end
   elseif treemode == 'script' then
     local tmp = choose:addChild(GUI.button(6,4,#lc.script/divide,1,cr1,cr2,cr1,cr2,lc.script))
     tmp.onTouch = function()
       choose:remove()
       fs.write('/Temporary/'..tostring(#game.scripts+1)..'.lua',lc.DFtS)
-      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = userSettings.opengames.scriptName or 'script',type = 'script'})
+      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
     drawtree()
     drawparams(game.scripts[#game.scripts])
     end
@@ -1844,6 +1939,7 @@ tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 tmp.onSubmit = function(path)
 choose:remove()
     table.insert(game.storage,{path = path,name = userSettings.opengames.storageName or 'StorageEl',type = 'file'})
+    table.insert(game.storage.buffer,{})
   OE.draw()
   drawtree()
   drawparams(game.storage[#game.storage])
