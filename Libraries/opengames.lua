@@ -4,8 +4,8 @@ local image = require('Image')
 local system = require('System')
 local fs = require('filesystem')
 local computer = require("computer")
+local paths = require('Paths')
 local eventObject
-local userSettings = system.getUserSettings()
 function opengames.init(params)
 		opengames.isEditor = params.editor or false
 		opengames.useImages = params.useImages or true
@@ -22,19 +22,23 @@ function opengames.init(params)
 		end
 		opengames.gamepath = params.gamePath
 		opengames.game = params.game
+		opengames.cashe = {scripts={},images={}}
+		opengames.editor = {BG=params.bg,TITLE=params.title}
+		opengames.imageAtlas = params.imageAtlas
 		opengames.container = params.container
+		-- Init scripts module
 		eventObject = opengames.container:addChild(GUI.object(1,1,1,1))
-		eventObject.scripts = {} -- {time_started, prev_call, time_end, interval, callback}
+		eventObject.scripts = {} -- [n] = {time_started, prev_call, time_end, interval, callback}
 		eventObject.opengames = opengames
 		eventObject.eventHandler = function(_,object,...)
 		  local computer = require('computer')
 		  for i = 1, #object.scripts do
 		    if computer.uptime() > object.scripts[i].prev_call+object.scripts[i].interval then
 		      object.scripts[i].prev_call = computer.uptime()
-		      object.scripts[i].callback({...},object.opengames)
+		      object.scripts[i].callback({...},object.opengames,i,object)
 		    end
-		    if object.scripts[i].time_end < computer.uptime() then
-		      if object.scripts[i].time_end < 0 then
+		    if computer.uptime()-object.scripts[i].time_end < computer.uptime() then
+		      if object.scripts[i].time_end > 0 then
 		        object.scripts[i] = nil
 		      end
 		    end
@@ -66,6 +70,25 @@ function opengames.Instance.new(...)
     table.insert(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, prevMode = 'roundedButton', switchMode = args[15] or false, mode = args[13] or 'default', type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
   elseif args[1] == 'image' then
     table.insert(game.screen,{visible = args[6], type = 'image',x=args[3],y=args[4],image=args[5],name = args[2]})
+  elseif args[1] == 'animation' then
+    table.insert(game.screen,{tick = function(anim) 
+    anim.stage = anim.stage + 1
+    if anim.atlas:getImage(tostring(anim.stage)) then 
+      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))
+      return true, 'next'
+    else 
+      anim.stage = 1
+      anim.raw.image = anim.atlas:getImage(tostring(anim.stage)) 
+      return true, 'new'
+    end
+    end, checkNext = function(anim) 
+    local tmp = anim.stage + 1
+    if anim.atlas:getImage(tostring(tmp)) then
+      return 'next'
+    else
+      return 'new'
+    end
+    end, visible = args[7],stage=0,type='animation',x=args[3],y=args[4],name=args[2],atlas=require('imageAtlas').init(args[5],args[6])})
   end
 end
 function opengames.Instance.remove(thing)
@@ -83,7 +106,9 @@ function opengames.Instance.remove(thing)
 		elseif type(thing) == 'table' then
 		  if not thing then return false end
 		  thing.raw:remove()
-		  thing = nil
+		  thing = opengames.find(opengames.game.screen,thing)
+		  opengames.game.screen[thing] = nil
+		  opengames.game.screen.buffer[thing] = nil
 		end
 end
 function table.copy (originalTable)
@@ -118,10 +143,50 @@ local function getBW(name)
 		local game = opengames.game
 		return game.screen.buffer.window[name]
 end
+local function execute(path,...)
+  if opengames.cashe.scripts[path] then
+    system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
+  else
+		  local gamepath = opengames.gamepath
+				if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch) then
+      opengames.cashe.scripts[path] = fs.read(gamepath..'/Scripts/'..path)
+    else
+      system.error('Script file does not exists.')
+    end
+    tmp = nil
+    system.call(load(opengames.cashe.scripts[path]),index,opengames)
+  end
+end
+local function loadImage(path)
+  if opengames.cashe.images[path] then
+    if opengames.useImages == true then
+      return opengames.cashe.images[path]
+    else
+      return image.load('/Icons/Script.pic')
+    end
+  else
+    local game = opengames.game
+    idk = nil
+    for e = 1,#game.storage do
+      if game.storage[e].name == path and fs.extension(game.storage[e].path) == '.pic' then
+        idk = game.storage[e].path
+      end
+    end
+    if idk == nil then return image.load('/Icons/Script.pic') end
+    opengames.cashe.images[path] = image.load(idk)
+    if opengames.useImages == true then
+      return opengames.cashe.images[path]
+    else
+      return image.load('/Icons/Script.pic')
+    end
+  end
+end
 function opengames.draw()
 		local game = opengames.game
 		local screen = opengames.container
 		local gamepath = opengames.gamepath
+		local BG = BG or opengames.editor.BG
+		local TITLE = TITLE or opengames.editor.TITLE
 		if game.window.width ~= getBW('width') then
 				BG.width = game.window.width
 				TITLE.localX = math.floor(game.window.width/2-string.len(game.window.title)/1.5/2)
@@ -221,9 +286,7 @@ function opengames.draw()
 											getR(i).animated = false
 											if opengames.isEditor == false then
 													getR(i).onTouch = function(_,tmp) 
-															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch,tmp.index,opengames)
-															end
+							  						execute(game.screen[tmp.index].onTouch,tmp.index)
 													end
 											end
 								end
@@ -277,15 +340,7 @@ function opengames.draw()
 					if getS(i,'type') == 'image' then
 							if getS(i,'visible') ~= getB(i,'visible') then
 									if getS(i,'visible') == true then
-			        idk = nil
-			        for e = 1,#game.storage do
-			          if game.storage[e].name == getS(i,'image') and fs.extension(game.storage[e].path) == '.pic' then
-			            idk = game.storage[e].path
-			          end
-			        end
-			        if idk == nil then idk = '/Icons/Script.pic' end
-											local tmp = screen:addChild(GUI.image(getS(i,'x'),getS(i,'y'),image.load(idk)))
-											game.screen[i].raw = tmp
+											game.screen[i].raw = screen:addChild(GUI.image(getS(i,'x'),getS(i,'y'),loadImage(getS(i,'image'))))
 									else
 											getR(i):remove()
 									end
@@ -297,14 +352,39 @@ function opengames.draw()
 		  				getR(i).localY = getS(i,'y')
 							end
 							if getS(i,'image') ~= getB(i,'image') then
-	        idk = nil
-	        for e = 1,#game.storage do
-	          if game.storage[e].name == getS(i,'image') and fs.extension(game.storage[e].path) == '.pic' then
-	            idk = game.storage[e].path
-	          end
-	        end
-			      if idk == nil then idk = '/Icons/Script.pic' end
-	        getR(i).image = image.load(idk)
+	        getR(i).image = loadImage(getS(i,'image'))
+				  	end
+				  	idk = nil
+       for e = 1,#game.storage do
+         if game.storage[e].name == getS(i,'image') then
+           if game.storage[e].path == game.storage.buffer[e].path then
+             idk = 1
+           else
+             opengames.clearImageCashe(getR(i,'image'))
+           end
+         end
+       end
+       if idk == nil then getR(i).image = loadImage(getS(i,'image')) end
+					end
+					if getS(i,'type') == 'animation' then
+							if getS(i,'visible') ~= getB(i,'visible') then
+									if getS(i,'visible') == true then
+									  game.screen[i].stage = game.screen[i].stage - 1
+											game.screen[i].raw = screen:addChild(GUI.image(getS(i,'x'),getS(i,'y'),image.load('/Icons/HDD.pic')))
+									  game.screen[i]:tick()
+									else
+											getR(i):remove()
+									end
+							end
+							if getS(i,'x') ~= getB(i,'x') then
+		  				getR(i).localX = getS(i,'x')
+							end
+							if getS(i,'y') ~= getB(i,'y') then
+		  				getR(i).localY = getS(i,'y')
+							end
+							if getS(i,'atlas') ~= getB(i,'atlas') then
+							  game.screen[i].stage = 0
+							  game.screen[i]:tick()
 				  	end
 					end
 					if getS(i,'type') == 'input' then
@@ -319,9 +399,7 @@ function opengames.draw()
 															game.screen[tmp.index].text = tmp.text
 															drawparams(game.screen[tmp.index])
 													else
-															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onInputEnded) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onInputEnded,tmp.index,opengames)
-															end
+							  						execute(game.screen[tmp.index].onInputEnded,tmp.index)
 													end
 											end
 									else
@@ -375,9 +453,7 @@ function opengames.draw()
 											 			drawparams(game.screen[tmp.index])
 													else
 										 				game.screen[tmp.index].state = tmp.state
-															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onStateChanged) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].onStateChanged,tmp.index,opengames)
-															end
+							  						execute(game.screen[tmp.index].onStateChanged,tmp.index)
 													end
 											end
 									else
@@ -440,9 +516,7 @@ function opengames.draw()
 											getR(i).onColorSelected = function(_,tmp)
 													game.screen[tmp.index].color = tmp.color
 													if opengames.isEditor == false then
-															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].path) then
-							  								system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index,opengames)
-															end
+							  						execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index)
 													else
 															drawparams(game.screen[tmp.index])
 											  end
@@ -482,9 +556,7 @@ function opengames.draw()
 													  game.screen[tmp.index].value = tmp.value
 													  drawparams(game.screen[tmp.index])
 											  else
-															if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].path) then
-																	system.execute(gamepath..'/Scripts/'..game.screen[tmp.index].path,tmp.index,opengames)
-															end
+															execute(game.screen[tmp.index].path,tmp.index)
 											  end
 											end
 									else
@@ -624,9 +696,7 @@ function opengames.draw()
 						     local tmp = getR(i):addItem(getS(i,'items')[e].name,getS(i,'items')[e].active)
 						     tmp.index = e
 						     tmp.onTouch = function(tmp,tmp01)
-													if fs.exists(gamepath..'/Scripts/'..game.screen[i].items[tmp01.index].path) then
-															system.execute(gamepath..'/Scripts/'..game.screen[i].items[tmp01.index].path,tmp.index,tmp01.index)
-													end
+													execute(game.screen[i].items[tmp01.index].path,tmp.index,tmp01.index)
 						     end
 						   end
 							end
@@ -646,6 +716,7 @@ function opengames.draw()
 		end
 		game.screen.buffer = {}
 		game.screen.buffer.window = table.copy(game.window)
+		game.storage.buffer = table.copy(game.storage)
 		for i = 1, #game.screen do
 				game.screen.buffer[i] = table.copy(game.screen[i])
 		end
@@ -683,6 +754,15 @@ end
 function opengames.getScripts()
   return opengames.game.scripts
 end
+function opengames.clearCashe()
+  opengames.cashe = {images={},scripts={}}
+end
+function opengames.clearImageCashe(imageName)
+  opengames.cashe.images[imageName] = nil
+end
+function opengames.clearScriptCashe(scriptName)
+  opengames.cashe.script[scriptName] = nil
+end
 function opengames.getLocalization(index)
   if index then
     return opengames.game.localization[index]
@@ -700,15 +780,33 @@ function opengames.regScript(script,mode,interval,endtime,name)
      callback = script
   end
   if callback then
-    table.insert(eventObject.scripts,{time_started = computer.uptime(), prev_call = computer.uptime(), interval = interval,callback = callback, name = name, time_end = computer.uptime()+endtime})
+    table.insert(eventObject.scripts,{time_started = computer.uptime(), prev_call = computer.uptime(), interval = interval,callback = callback, name = name, time_end = endtime})
   else
     return false
   end
   return true
 end
 function opengames.unregScript(name)
-  local result,_ = find(eventObject.scripts,name)
-  result = nil
+  result,_ = opengames.find(eventObject.scripts,name)
+  result.time_end = 1
+end
+function opengames.playAnimation(object,speed)
+  if type(object) == 'number' then
+    object = opengames.game.screen[object]
+  elseif type(object) == 'string' then
+    object = find(opengames.game.screen,object)
+  end
+  opengames.regScript(function(...) 
+  local args = {...}
+  local object, index = args[2].find(args[2].game.screen,args[4].scripts[args[3]].name) -- finding animation object
+  if object:checkNext() == 'new' then -- check if animation ended
+    object.stage = 0
+    object:tick()
+    args[2].unregScript(args[4].scripts[args[3]].name) -- if yes killing script
+  else
+    object:tick() -- .. else next frame
+  end
+  end,'function',speed,-1,object.name)
 end
 function opengames.find(where,what)
 		for i = 1, #where do
