@@ -12,7 +12,7 @@ if not userSettings.opengames then
 		system.saveUserSettings()
 end
 local OE = require('opengames')
-local gamepath = ''
+local gamepath = 'Autosave'
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 local treemode = 'screen'
 game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}
@@ -37,6 +37,7 @@ local params = win:addChild(GUI.filledWindow(102,24,40,23,cr1))
 local obj = win:addChild(GUI.filledWindow(102,2,36,20,cr1))
 OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
 game = OE.game
+OE.gamepath = gamepath
 
 function hts(...)
   return ("0x%06X"):format(...)
@@ -2206,7 +2207,7 @@ OE.regScript(function(...)
   local OE = args[2]
   local objectIndex = args[3]
   local object = args[4]
-  if OE.gamepath ~= '' or OE.gamepath ~= nil then
+  if OE.gamepath ~= '' or not OE.gamepath then
     OE.editorSave(OE.gamepath)
   end
 end,'function',userSettings.autoSaveTime or 30,-1,'Auto Save OpenGames Editor Service')
