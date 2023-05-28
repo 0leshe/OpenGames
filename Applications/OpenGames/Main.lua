@@ -15,7 +15,7 @@ local OE = require('opengames')
 local gamepath = ''
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 local treemode = 'screen'
-local game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {window={}}},storage={buffer={}}}
+game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}
 		if require'imageAtlas' then
 		  imageAtlas = require'imageAtlas'
 		  isImageAtlas = true
@@ -36,6 +36,7 @@ local TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.wind
 local params = win:addChild(GUI.filledWindow(102,24,40,23,cr1))
 local obj = win:addChild(GUI.filledWindow(102,2,36,20,cr1))
 OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
+game = OE.game
 
 function hts(...)
   return ("0x%06X"):format(...)
@@ -2023,20 +2024,52 @@ function drawtree()
     end
   end
 end
+local function adapting()
+ 		  for i = 1,#game.screen do
+ 		    if game.screen[i].type == 'animation' then
+ 		    local tmpatlas = require'imageAtlas'.init(1,1)
+ 		    game.screen[i].atlas.setImage = tmpatlas.setImage
+ 		    game.screen[i].atlas.getImage = tmpatlas.getImage
+		 		  game.screen[i].tick = function(anim) 
+		    anim.stage = anim.stage + 1
+		    if anim.atlas:getImage(tostring(anim.stage)) then 
+		      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))
+		      return true, 'next'
+		    else 
+		      anim.stage = 1
+		      anim.raw.image = anim.atlas:getImage(tostring(anim.stage)) 
+		      return true, 'new'
+		    end
+		    end
+		    game.screen[i].checkNext = function(anim) 
+		    local tmp = anim.stage + 1
+		    if anim.atlas:getImage(tostring(tmp)) then
+		      return 'next'
+		    else
+		      return 'new'
+		    end
+		    end
+    end
+ 		  end
+  OE.draw()
+end
 local function save(path)
 		gamepath = path
 		OE.gamepath = gamepath
 		if not path then return false end
   fs.makeDirectory('/Temporary/ProjectSave')
   local idk = {}
-		  local tmpgame = table.copy(game)
-		  for i = 1,#tmpgame.screen do
-		  		tmpgame.screen[i].raw = nil
-		  		tmpgame.screen.buffer[i].raw = nil
-		  		tmpgame.screen.buffer[i].visible = false
+		  for i = 1,#game.screen do
+		  		game.screen[i].raw:remove()
+		  		game.screen[i].raw = nil
+		  		game.screen.buffer[i].raw = nil
+		  		game.screen.buffer[i].visible = false
+		  		if game.screen[i].type == 'animation' then
+		  		  game.screen[i].tick = nil
+		  		  game.screen[i].checkNext = nil
+		  		end
 		  end
-    fs.writeTable('/Temporary/ProjectSave/Game.dat',tmpgame)
-		  tmpgame = nil
+    fs.writeTable('/Temporary/ProjectSave/Game.dat',game)
   for i = 1,#game.storage do
   		table.insert(idk,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
     fs.copy(game.storage[i].path,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
@@ -2045,7 +2078,8 @@ local function save(path)
   		table.insert(idk,'/Temporary/ProjectSave/' ..fs.name(game.scripts[i].path))
     fs.copy(game.scripts[i].path,'/Temporary/ProjectSave/'..fs.name(game.scripts[i].path))
   end
-  compressor.pack(path..'.pkg',idk)
+  compressor.pack(string.gsub(path,'.proj','')..'.proj',idk)
+				adapting()
 end
 local function saveAsWindow ()
 		local tmp = GUI.addFilesystemDialog(wk,true,50, 30, lc.save,lc.cancel,lc.name,'/')
@@ -2149,9 +2183,12 @@ local function open(path)
 		  for i = 1,#game.screen.buffer do
 		  		game.screen.buffer[i].visible = false
  		  end
+ 		  print(game.screen)
     OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
 				OE.gamepath = gamepath
+				adapting()
 		  OE.draw()
+		  drawparams(game.screen[1])
 		  drawtree()
 end
 contextMenu:addItem(lc.open,false).onTouch = function()
