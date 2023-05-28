@@ -2025,6 +2025,8 @@ function drawtree()
 end
 local function save(path)
 		gamepath = path
+		OE.gamepath = gamepath
+		if not path then return false end
   fs.makeDirectory('/Temporary/ProjectSave')
   local idk = {}
 		  local tmpgame = table.copy(game)
@@ -2144,21 +2146,11 @@ local function open(path)
 		      end
 		    end
 		  end
-		  for i = 1, #game.screen do
-		  		if game.screen[i].type == 'button' then
-		  				if not game.screen[i].animated then game.screen[i].animated = userSettings.buttonAnimated or true end
-		  				if not game.screen[i].disable then game.screen[i].disable = userSettings.buttonDisable or false end
-		  				if not game.screen[i].switchMode then game.screen[i].switchMode = userSettings.buttonSwitchMode or false end
-		  				if not game.screen[i].mode then game.screen[i].mode = userSettings.buttonMode or 'default' end
-		  				if not game.screen[i].prevMode then game.screen[i].prevMode = userSettings.buttonPrevMode or 'roundedButton' end
-		  		end
-		  end
-		  OE = nil
-		  local OE = require('opengames')
 		  for i = 1,#game.screen.buffer do
 		  		game.screen.buffer[i].visible = false
-		  end
-		  OE.init({editor = true,game = game,container = screen})
+ 		  end
+    OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
+				OE.gamepath = gamepath
 		  OE.draw()
 		  drawtree()
 end
@@ -2170,6 +2162,17 @@ contextMenu:addItem(lc.open,false).onTouch = function()
 		end
 	tmp:show()
 end
+OE.editorSave = save
+OE.gamepath = gamepath
+OE.regScript(function(...)
+  local args = {...}
+  local OE = args[2]
+  local objectIndex = args[3]
+  local object = args[4]
+  if OE.gamepath ~= '' or OE.gamepath ~= nil then
+    OE.editorSave(OE.gamepath)
+  end
+end,'function',userSettings.autoSaveTime or 30,-1,'Auto Save OpenGames Editor Service')
 contextMenu:addSeparator()
 contextMenu:addItem(lc.export,false).onTouch = function()
 				local tmp = GUI.addFilesystemDialog(wk,true,50, 30, lc.export,lc.cancel,lc.name,'/')
