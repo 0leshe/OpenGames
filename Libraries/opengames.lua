@@ -59,7 +59,7 @@ function opengames.Instance.new(...)
   elseif args[1] == 'slider' then
     table.insert(game.screen,{visible = args[13],type = 'slider',path=args[12],x=args[3],y=args[4],width=args[5],colorp=args[6],colorpp=args[7],colorv=args[8],minv=args[9],maxv=args[10],value=args[11], name = args[2]})
   elseif args[1] == 'progressIndicator' then
-    table.insert(game.screen,{visible = args[8],type = 'progressIndicator',x=args[3],y=args[4],active=userSettings.opengames.piActive or false,rollStage=userSettings.opengames.piRollStage or 1,colorp= args[6],colors=args[7],colorpa=args[5],name = args[2]})
+    table.insert(game.screen,{visible = args[8],type = 'progressIndicator',x=args[3],y=args[4],active= false,rollStage= 1,colorp= args[6],colors=args[7],colorpa=args[5],name = args[2]})
   elseif args[1] == 'colorSelector' then
     table.insert(game.screen,{visible = args[10],path=args[9],type = 'colorSelector',color=args[7],x=args[3],y=args[4],width=args[5],height=args[6],text=args[8],name = args[2]})
   elseif args[1] == 'input' then
@@ -141,7 +141,7 @@ local function getR(ind)
 end
 local function getBW(name)
 		local game = opengames.game
-		return game.screen.buffer.window[name]
+		return game.window.buffer[name]
 end
 local function execute(path,...)
   if opengames.cashe.scripts[path] then
@@ -151,7 +151,8 @@ local function execute(path,...)
 				if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch) then
       opengames.cashe.scripts[path] = fs.read(gamepath..'/Scripts/'..path)
     else
-      system.error('Script file does not exists.')
+      system.error('/opengames.lua',154,'Hell nah man :skull:, required file does not exists.')
+      return false
     end
     tmp = nil
     system.call(load(opengames.cashe.scripts[path]),index,opengames)
@@ -715,7 +716,7 @@ function opengames.draw()
 					end
 		end
 		game.screen.buffer = {}
-		game.screen.buffer.window = table.copy(game.window)
+		game.window.buffer = table.copy(game.window)
 		game.storage.buffer = table.copy(game.storage)
 		for i = 1, #game.screen do
 				game.screen.buffer[i] = table.copy(game.screen[i])
@@ -796,17 +797,24 @@ function opengames.playAnimation(object,speed)
   elseif type(object) == 'string' then
     object = find(opengames.game.screen,object)
   end
-  opengames.regScript(function(...) 
-  local args = {...}
-  local object, index = args[2].find(args[2].game.screen,args[4].scripts[args[3]].name) -- finding animation object
-  if object:checkNext() == 'new' then -- check if animation ended
-    object.stage = 0
-    object:tick()
-    args[2].unregScript(args[4].scripts[args[3]].name) -- if yes killing script
-  else
-    object:tick() -- .. else next frame
+  if not opengames.find(eventObject.scripts,object.name) then -- Works only if animation for thi object dosent started
+		  opengames.cashe.eventObject = {[object.name] = {prevStage = object.stage}}
+		  object.stage = 0
+		  opengames.regScript(function(...) 
+		  local args = {...}
+		  local object, index = args[2].find(args[2].game.screen,args[4].scripts[args[3]].name) -- finding animation object
+		  if object:checkNext() == 'new' then -- check if animation ended ..
+		    object.stage = args[2].cashe.eventObject[args[4].scripts[args[3]].name].prevStage - 1
+		    object:tick()
+		    args[2].unregScript(args[4].scripts[args[3]].name) -- .. if yes killing script ..
+		  else
+		    object:tick() -- .. else next frame
+		  end
+		  end,'function',speed,-1,object.name)
   end
-  end,'function',speed,-1,object.name)
+end
+function getEventObject()
+  return eventObject
 end
 function opengames.find(where,what)
 		for i = 1, #where do
@@ -816,6 +824,7 @@ function opengames.find(where,what)
 				  return i
 				end
 		end
+		return false
 end
 
 return opengames
