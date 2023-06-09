@@ -12,7 +12,7 @@ if not userSettings.opengames then
 		system.saveUserSettings()
 end
 local OE = require('opengames')
-local gamepath = 'Autosave'
+local gamepath = '/Autosave'
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 local treemode = 'screen'
 game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}
@@ -2184,7 +2184,6 @@ local function open(path)
 		  for i = 1,#game.screen.buffer do
 		  		game.screen.buffer[i].visible = false
  		  end
- 		  print(game.screen)
     OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
 				OE.gamepath = gamepath
 				adapting()
@@ -2217,13 +2216,21 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 		tmp:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 		local function export(path)
 		  local towrite = ''
-		  towrite = towrite .. 'local image = require("Image")\nlocal fs = require("filesystem")\nlocal event = require("event")\nlocal GUI = require("GUI")\nlocal system = require("System")\nlocal OE = require("opengames")\nlocal gamepath = string.gsub(system.getCurrentScript(),"/Main.lua","")\ngame = fs.readTable(gamepath.."/Game.dat")\ngame.localization=system.getCurrentScriptLocalization()\nlocal wk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.height,0x989898))\nwin:removeChildren()\nlocal BG = win:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color)) \nlocal TITLE = win:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))\nOE.init({gamePath = gamepath, editor = false,game = game, container = win})\n'
+		  towrite = towrite .. 'local image = require("Image")\nlocal fs = require("filesystem")\nlocal event = require("event")\nlocal GUI = require("GUI")\nlocal system = require("System")\nlocal OE = require("opengames")\nlocal gamepath = string.gsub(system.getCurrentScript(),"/Main.lua","")\ngame = fs.readTable(gamepath.."/Game.dat")\ngame.localization=system.getCurrentScriptLocalization()\nlocal wk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.height,0x989898))\nwin:removeChildren()\nlocal BG = win:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color)) \nlocal TITLE = win:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))\n'
 		  fs.makeDirectory(path..'.app/Scripts')
 		  fs.makeDirectory(path..'.app/Assets')
 		  fs.makeDirectory(path..'.app/Localizations')
+		  fs.makeDirectory(path..'.app/Animation_data')
+		  for i = 1, #game.screen do
+		  		if game.screen[i].type == 'animation' then
+						  fs.makeDirectory(path..'.app/Animation_data/'..game.screen[i].name)
+						  game.screen[i].atlas:save(path..'.app/Animation_data/'..game.screen[i].name..'/')
+		  		end
+		  end
+		  towrite = towrite .. 'for i = 1,#game.screen do\n if game.screen[i].type == "animation" then\n game.screen[i].tick = function(anim)     anim.stage = anim.stage + 1    if anim.atlas:getImage(tostring(anim.stage)) then       anim.raw.image = anim.atlas:getImage(tostring(anim.stage))      return true, "next"    else       anim.stage = 1      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))       return true, "new"    end    end    game.screen[i].checkNext = function(anim)     local tmp = anim.stage + 1    if anim.atlas:getImage(tostring(tmp)) then      return "next"    else      return "new"    end		 end local path = gamepath.."/Animation_data/"..game.screen[i].name.."/Atlas.pic"\ngame.screen[i].atlas = require("imageAtlas").init(path,string.gsub(path,"Atlas.pic","Config.cfg"))\nend\nend\n'
 		  for i = 1,#game.storage do
 		    if fs.extension(game.storage[i].path) == '.lang' then 
-		      fs.copy(game.storage[i].path,path..'.app/Localizations/'..fs.name(game.storage[i].path)) 
+		      fs.copy(game.storage[i].path,path..'.app/Localizations/'..fs.name(game.storage[i].path))
 		    else
 		      fs.copy(game.storage[i].path,path..'.app/Assets/'..fs.name(game.storage[i].path))
 		    end
@@ -2253,9 +2260,14 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 		  		tmpgame.screen[i].raw = nil
 		  		tmpgame.screen.buffer[i].raw = nil
 		  		tmpgame.screen.buffer[i].visible = false
+		  		if tmpgame.screen[i].type == 'animtion' then
+		  				tmpgame.screen[i].atlas = {}
+		  				tmpgame.screen[i].tick = nil
+		  				tmpgame.screen[i].checkNext = nil
+		  		end
 		  end
-		  tmpgame.screen.buffer.window.abn = false
-		  towrite = towrite .. 'OE.draw()\n for i = 1,#game.scripts do\n if game.scripts[i].autoload == true then\n system.execute(game.scripts[i].path)\n end\n end\n'
+		  tmpgame.window.buffer.abn = false
+		  towrite = towrite .. 'OE.init({gamePath = gamepath, editor = false,game = game, container = win})\nOE.draw()\n for i = 1,#game.scripts do\n if game.scripts[i].autoload == true then\n system.execute(game.scripts[i].path)\n end\n end\n'
 		  fs.write(path..'.app/Main.lua',towrite)
 		  fs.writeTable(path..'.app/Game.dat',tmpgame)
 		  fs.copy(idk,path..'.app/Icon.pic')
