@@ -5,8 +5,12 @@ local event = require('event')
 local image = require('image')
 local fs = require('filesystem')
 local compressor = require('compressor')
+local editorPath = string.gsub(system.getCurrentScript(),"/Main.lua","")
 local lc = system.getCurrentScriptLocalization()
 local userSettings = system.getUserSettings()
+lc.x = 'X'
+lc.y = 'Y'
+local paramsPath = editorPath..'/OpenGames_Editor_Data/Edit_Params/'
 if not userSettings.opengames then
 		userSettings.opengames = {}
 		system.saveUserSettings()
@@ -29,13 +33,13 @@ local function changePosition(idk,fromposition,toposition)
   		game.screen[fromposition].raw:moveBackward()
  	end
 end
-local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.5'))
+local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.5.1'))
 local screen = win:addChild(GUI.container(2,3,160,50))
 local BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color))
 local TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
 local params = win:addChild(GUI.filledWindow(102,24,40,23,cr1))
 local obj = win:addChild(GUI.filledWindow(102,2,36,20,cr1))
-OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
+OE.init({wk = wk, imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
 game = OE.game
 OE.gamepath = gamepath
 
@@ -60,6 +64,167 @@ function del()
 		drawtree() 
 		drawparams(game.screen[1])
 end
+local function endOfParams(lastIndex, objectType)
+  tt(3,lastIndex+1,cr2,lc.delete)
+  local count = 1
+  local tmp = bn(17,lastIndex+1,#lc.delete/divide,1,cr1,cr2,cr1,cr2,lc.delete)
+  if objectType == 'script' then
+   tmp.onTouch = function() for i = 1,#game.scripts do if what == game.scripts[i] then table.remove(game.scripts,i) break end end OE.draw() drawtree() drawparams(game.scripts[1]) end
+  elseif objectType == 'file' then
+    tmp.onTouch = function () for i = 1,#game.storage do if what == game.storage[i] then table.remove(game.storage,i) break end end OE.draw() drawtree() drawparams(game.storage[1]) end
+  else
+   count = 5
+   tmp.onTouch = del
+  tt(3,lastIndex+2,cr2,lc.visible)
+  local tmp = bx(17, lastIndex+2, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
+  if what.visible == true then
+    tmp:addItem(lc.truee).onTouch = function()
+      what.visible = true
+      OE.draw()
+    end
+    tmp:addItem(lc.falsee).onTouch = function()
+      what.visible = false
+      OE.draw()
+    end
+  else
+    tmp:addItem(lc.falsee).onTouch = function()
+      what.visible = false
+      OE.draw()
+    end
+   tmp:addItem(lc.truee).onTouch = function()
+      what.visible = true
+      OE.draw()
+    end
+  end
+  tt(3,lastIndex+3,cr2,lc.up)
+  tt(3,lastIndex+4,cr2,lc.down)
+  local tmp = bn(17,lastIndex+3,#lc.up/divide,1,cr1,cr2,cr1,cr2,lc.up)
+  tmp.onTouch = function()
+    for i = 1,#game.screen do
+      if game.screen[i] == what then
+        changePosition(true,i,i-1)
+        OE.draw()
+        drawtree()
+        break
+      end
+    end
+  end
+  local tmp = bn(17,lastIndex+4,#lc.down/divide,1,cr1,cr2,cr1,cr2,lc.down)
+  tmp.onTouch  = function()
+    for i = 1,#game.screen do
+      if game.screen[i] == what then
+        changePosition(false,i,i+1)
+        OE.draw()
+        drawtree()
+        break
+      end
+    end
+  end
+  end
+  return count+ lastIndex+1
+end
+function drawParamsInParams(objectType, useEnd)
+  if not fs.exists(paramsPath..objectType..'.cfg') then
+   return GUI.alert('Cant find file of object parameters: '..string.upper(objectType))
+  end
+  local paramsTable = fs.readTable(paramsPath..objectType..'.cfg')
+  local e
+  local indexOfParam = 3
+  if paramsTable == nil then
+    GUI.alert('What bro choose 🗣🗣')
+    return
+  end
+  for i = 1, #paramsTable do
+   if paramsTable[i].type == 'comboBox' and type(what[paramsTable[i].param]) == 'boolean' then
+    local color
+    if what[paramsTable[i].param] then
+      color = 0x00FF40
+    else
+      color = 0xFF0000
+    end
+    params:addChild(GUI.panel(38,indexOfParam+i,1,1,color))
+    tt(3,indexOfParam+i,cr2,lc[paramsTable[i].param])
+   else
+   tt(3,indexOfParam+i,cr2,lc[paramsTable[i].param])
+    end
+   if paramsTable[i].type == 'input' then
+     local tmp = it(17, indexOfParam+i, 20, 1, cr1, cr2, cr3, cr1, cr2, what[paramsTable[i].param], string.upper(paramsTable[i].param))
+     tmp.onInputFinished = function()
+   		if tmp.text ~= '' then
+   		 local value
+   		 if paramsTable[i].data == 'int' then
+   		   value = tonumber(tmp.text)
+   		 else
+   		   value = tmp.text
+   		 end
+      	what[paramsTable[i].param] = value
+      	OE.draw()
+    	end
+     end
+   elseif paramsTable[i].type == 'colorInput' or  paramsTable[i].type == 'inputColor' then
+     local tmp = params:addChild(GUI.colorSelector(17, indexOfParam+i, 20, 1, what[paramsTable[i].param], hts(what[paramsTable[i].param])))
+    tmp.onColorSelected = function()
+      	what[paramsTable[i].param] = tmp.color
+        tmp.text = hts(tmp.color)
+      	OE.draw()
+   		end
+    elseif paramsTable[i].type == 'inputFile' then
+    local tmp = params:addChild(GUI.filesystemChooser(17, indexOfParam+i, 20, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.choose, '/'))
+    tmp.onSubmit = function(path)
+      what[paramsTable[i].param] = path
+      if paramsTable[i].callBack then
+        paramsTable[i].callBack(what,OE,lc,path)
+      end
+      drawtree()
+      OE.draw()
+      drawparams(what)
+    end
+    elseif paramsTable[i].type == 'button' then
+    local towrite
+    if type(what[paramsTable[i].param]) == 'string' and not paramsTable[i].loc then
+      towrite = what[paramsTable[i].param]
+    else
+      towrite = lc[paramsTable[i].param]
+    end
+    if paramsTable[i].loc then
+      towrite = lc[paramsTable[i].loc]
+    end
+    local tmp = params:addChild(GUI.button(17,indexOfParam+i,#towrite/divide,1,cr1,cr2,cr2,cr1,towrite))
+    tmp.onTouch = function(_,object)
+      paramsTable[i].callBack(what,OE,lc,object)
+    end
+   elseif paramsTable[i].type == 'comboBox' then
+    local tmp = bx(17, indexOfParam+i, 15, 1, cr1, cr2, cr1, cr2)
+    if paramsTable[i].vars then
+      for e = 1,#paramsTable[i].vars do
+		     tmp:addItem(lc[paramsTable[i].vars[e]]).onTouch = function()
+		       what[paramsTable[i].param] = paramsTable[i].vars[e]
+		       OE.draw()
+		     end
+		     end
+    else
+     tmp:addItem(lc.truee).onTouch = function()
+       what[paramsTable[i].param] = true
+       OE.draw()
+    		  drawparams(what)
+     end
+     tmp:addItem(lc.falsee).onTouch = function()
+       what[paramsTable[i].param] = false
+       OE.draw()
+    		  drawparams(what)
+     end
+    end
+   end
+   e = i
+  end
+  local toEnd
+  if not useEnd then
+    toEnd =  endOfParams(e+indexOfParam, objectType)
+  else
+    toEnd = e + indexOfParam
+  end
+  return toEnd
+end
 function drawparams(whatt)
   what = whatt
   params:removeChildren()
@@ -76,454 +241,14 @@ function drawparams(whatt)
   tt(3,2,cr2,'Params')
   if what.type == 'text' then
     tt(3,3,cr2,lc.type..' | '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.text)
-    tt(3,8,cr2,lc.color)
-    tt(3,9,cr2,lc.visible)
-    tt(3,10,cr2,lc.delete)
-    tt(3,11,cr2,lc.up)
-    tt(3,12,cr2,lc.down)
-    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,12,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,10,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 9, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
-    local xx = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    xx.onInputFinished = function()
-    		if xx.text ~= '' then
-      		what.x = tonumber(xx.text)
-     	 	OE.draw()
-     	end
-    end
-    local yy = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    yy.onInputFinished = function()
-    		if yy.text ~= '' then
-      what.y = tonumber(yy.text)
-      OE.draw()
-      end
-    end
-    local Text = it(17, 7, 20, 1, cr1, cr2, cr3, cr1, cr2, what.text, "T")
-    Text.onInputFinished = function()
-       what.text = Text.text
-       OE.draw()
-    end
-    local color = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.color), "C")
-    color.onInputFinished = function()
-    		if color.text ~= '' then
-      what.color = tonumber(color.text)
-      OE.draw()
-      end
-    end
-    local name = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    name.onInputFinished = function()
-      what.name = name.text
-      drawtree()
-    end
+    drawParamsInParams('text')
   elseif what.type == 'button' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.heigth)
-    tt(3,8,cr2,lc.width)
-    tt(3,9,cr2,lc.text)
-    tt(3,10,cr2,lc.colorbg)
-    tt(3,11,cr2,lc.colorbgp)
-    tt(3,12,cr2,lc.colorfg)
-    tt(3,13,cr2,lc.colorfgp)
-    tt(3,14,cr2,lc.onTouch)
-    tt(3,15,cr2,lc.mode)
-    tt(3,16,cr2,lc.animated)
-    tt(3,17,cr2,lc.switchMode)
-    tt(3,18,cr2,lc.disabled)
-    tt(3,19,cr2,lc.visible)
-    tt(3,20,cr2,lc.delete)
-    tt(3,21,cr2,lc.up)
-    tt(3,22,cr2,lc.down)
-    local tmp = bx(17, 15, 15, 1, cr1, cr2, cr1, cr2)
-    if what.mode == 'default' then
-    		tmp:addItem(lc.default).onTouch = function()
-    		  what.mode = 'default'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		if what.prevMode == 'framedButton' then
-    		tmp:addItem(lc.framedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'framedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.roundedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'roundedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		else
-    		tmp:addItem(lc.roundedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'roundedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.framedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'framedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		end
-    elseif what.mode == 'framedButton' then
-    		tmp:addItem(lc.framedButton).onTouch = function()
-    		  what.mode = 'framedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		if what.prevMode == 'default' then
-    		tmp:addItem(lc.default).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'default'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.roundedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'roundedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    	else
-    		tmp:addItem(lc.roundedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'roundedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.default).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'default'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		end
-    elseif what.mode == 'roundedButton' then
-    		tmp:addItem(lc.roundedButton).onTouch = function()
-    		  what.mode = 'roundedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		if what.prevMode == 'default' then
-    		tmp:addItem(lc.default).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'default'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.framedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'framedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-     else
-    		tmp:addItem(lc.framedButton).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'framedButton'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		tmp:addItem(lc.default).onTouch = function()
-    		  what.prevMode = what.mode
-    		  what.mode = 'default'
-    		  OE.draw()
-    		  drawparams(what)
-    		end
-    		end
-    end
-    local tmp = bx(17, 16, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.animated == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.animated = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.animated = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.animated = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.animated = true
-        OE.draw()
-      end
-    end
-    local tmp = bx(17, 18, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.disabled == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.disabled = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.disabled = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.disabled = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.disabled = true
-        OE.draw()
-      end
-    end
-    local tmp = bx(17, 17, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.switchMode == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.switchMode = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.switchMode = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.switchMode = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.switchMode = true
-        OE.draw()
-      end
-    end
-    local tmp = bn(17,21,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,22,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,20,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 19, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20, 1, cr1, cr2, cr3, cr1, cr2, what.text, "T")
-    tmp.onInputFinished = function()
-       what.text = tmp.text
-       OE.draw()
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorbg), "BG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorbg = tonumber(tmp.text)
-      OE.draw()
-      elseif tmp.text == '{tarns}' or tmp.text == '{transparent}' then
-        what.colorbg = nil
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorbgp), "BGP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorbgp = tonumber(tmp.text)
-      draw()
-      elseif tmp.text == '{tarns}' or tmp.text == '{transparent}' then
-        what.colorbgp = nil
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 13, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorfgp), "FGP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorfgp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 12, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorfg), "FG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorfg = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1,cr1, cr2, cr3, cr1, cr2, what.height, "H")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.height = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 14, 20,1, cr1, cr2, cr3, cr1, cr2, string.gsub(what.onTouch,'.lua',''), "oT")
-    tmp.onInputFinished = function()
-      what.onTouch = tmp.text .. '.lua'
-    end
-    local tmp = it(17, 4, 20,1,cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
+    drawParamsInParams('button')
   elseif what.type == 'script' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,lc.path)
-    tt(3,6,cr2,lc.autoload)
-    tt(3,7,cr2,lc.delete)
-    tt(3,8,cr2,lc.up)
-    tt(3,9,cr2,lc.down)
-    local tmp = bn(17,8,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,9,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,7,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = function() for i = 1,#game.scripts do if what == game.scripts[i] then table.remove(game.scripts,i) break end end OE.draw() drawtree() drawparams(game.scripts[1]) end
-    local tmp = bx(17, 6, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.autoload == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.autoload = true
-       OE.draw()
-     end
-     tmp:addItem(lc.falsee).onTouch = function()
-        what.autoload = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.autoload = false
-        OE.draw()
-      end
-      tmp:addItem(lc.truee).onTouch = function()
-        what.autoload = true
-        OE.draw()
-      end
-    end
-    local tmp  = bn(17,5,#what.path,1,cr1,cr2,cr1,cr2,what.path)
-    tmp.onTouch = function()
-      system.execute(paths.system.applicationMineCodeIDE, what.path)
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local codeView = params:addChild(GUI.codeView(3, 11, 36, 10, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
+   local tmp =endOfParams(drawParamsInParams('script',true), 'script') + 1
+    local codeView = params:addChild(GUI.codeView(3, tmp, 36, 23 - tmp, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
 local counter = 1
 for line in fs.lines(what.path) do
 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
@@ -536,1161 +261,38 @@ for line in fs.lines(what.path) do
 end
   elseif what.type == 'image' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.image)
-    tt(3,8,cr2,lc.visible)
-    tt(3,9,cr2,lc.delete)
-    tt(3,10,cr2,lc.up)
-    tt(3,11,cr2,lc.down)
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.image, "I")
-    tmp.onInputFinished = function()
-      what.image = tmp.text
-      OE.draw()
-    end
-    local tmp = bn(17,10,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,9,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 8, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
+    drawParamsInParams('image')
   elseif what.type == 'input' then
     tt(3,3,cr2,lc.type..': | '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.heigth)
-    tt(3,8,cr2,lc.width)
-    tt(3,9,cr2,lc.text)
-    tt(3,10,cr2,lc.ph)
-    tt(3,11,cr2,lc.colorbg)
-    tt(3,12,cr2,lc.colorbgp)
-    tt(3,13,cr2,lc.colorfg)
-    tt(3,14,cr2,lc.colorfgp)
-    tt(3,15,cr2,lc.colorph)
-    tt(3,16,cr2,lc.path)
-    tt(3,17,cr2,lc.delete)
-    tt(3,18,cr2,lc.visible)
-    tt(3,19,cr2,lc.up)
-    tt(3,20,cr2,lc.down)
-    local tmp = bn(17,19,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,20,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,17,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(16, 18, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 15, 20, 1, cr1, cr2, cr3, cr1, cr2, hts(what.colorph), "PH")
-    tmp.onInputFinished = function()
-      what.colorph =tonumber(tmp.text)
-      OE.draw()
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20, 1, cr1, cr2, cr3, cr1, cr2, what.text, "T")
-    tmp.onInputFinished = function()
-       what.text = tmp.text
-       OE.draw()
-    end
-    local tmp = it(17, 10, 20, 1, cr1, cr2, cr3, cr1, cr2, what.textph, "T")
-    tmp.onInputFinished = function()
-       what.textph = tmp.text
-       OE.draw()
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorbg), "BG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorbg = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 12, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorbgp), "BGP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorbgp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 14, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorfgp), "FGP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorfgp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 13, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorfg), "FG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorfg = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.height, "H")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.height = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 16, 20,1, cr1, cr2, cr3, cr1, cr2, string.gsub(what.onInputEnded,'.lua',''), "oT")
-    tmp.onInputFinished = function()
-      what.onInputEnded = tmp.text .. '.lua'
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
+    drawParamsInParams('input')
   elseif what.type == 'switch' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.colorp)
-    tt(3,9,cr2,lc.colors)
-    tt(3,10,cr2,lc.colorpp)
-    tt(3,11,cr2,lc.path)
-    tt(3,12,cr2,lc.state)
-    tt(3,13,cr2,lc.visible)
-    tt(3,14,cr2,lc.delete)
-    tt(3,15,cr2,lc.up)
-    tt(3,16,cr2,lc.down)
-    local tmp = bn(17,15,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,16,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 4, 5,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = bn(17,14,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 13, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, string.gsub(what.onStateChanged,'.lua',''), "oSC")
-    tmp.onInputFinished = function()
-      what.onStateChanged = tmp.text .. '.lua'
-      OE.draw()
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorp), "P")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colors), "S")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colors = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2, hts(what.colorpp), "PP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorpp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = bx(17, 12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1,cr2)
-    if what.state == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.state = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.state = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.state = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.state = true
-        OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
+    drawParamsInParams('switch')
   elseif what.type == 'window' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.width)
-    tt(3,5,cr2,lc.heigth)
-    tt(3,6,cr2,lc.title)
-    tt(3,7,cr2,lc.titleColor)
-    tt(3,8,cr2,lc.color)
-    tt(3,9,cr2,lc.actionbuttons)
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-          drawtree()
-          end
-    end
-    local tmp = it(17, 5, 20,1, cr1, cr2, cr3, cr1, cr2, what.height, "H")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.height = tonumber(tmp.text)
-      OE.draw()
-          drawtree()
-          end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.color), "C")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.color = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.titleColor), "CT")
-    tmp.onInputFinished = function()
-      what.titleColor = tonumber(tmp.text)
-      OE.draw()
-    end
-    local tmp = it(17, 6, 20,1, cr1, cr2, cr3, cr1, cr2,  what.title, "T")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.title = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = bx(17, 9, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.abn == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.abn = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.abn = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.abn = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.abn = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('window')
   elseif what.type == 'colorSelector' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.heigth)
-    tt(3,9,cr2,lc.color)
-    tt(3,10,cr2,lc.text)
-    tt(3,11,cr2,lc.path)
-    tt(3,12,cr2,lc.visible)
-    tt(3,13,cr2,lc.delete)
-    tt(3,14,cr2,lc.up)
-    tt(3,15,cr2,lc.down)
-    local tmp = bn(17,14,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,15,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, what.path, "P")
-    tmp.onInputFinished = function()
-      what.path = tmp.text .. '.lua'
-      OE.draw()
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2, what.text, "T")
-    tmp.onInputFinished = function()
-      what.text = tmp.text
-      OE.draw()
-    end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.color), "C")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.color = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, what.height, "H")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.height = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17,12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('colorSelector')
   elseif what.type == 'progressBar' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.colorp)
-    tt(3,9,cr2,lc.colors)
-    tt(3,10,cr2,lc.colorv)
-    tt(3,11,cr2,lc.value)
-    tt(3,12,cr2,lc.visible)
-    tt(3,13,cr2,lc.delete)
-    tt(3,14,cr2,lc.up)
-    tt(3,15,cr2,lc.down)
-    local tmp = bn(17,14,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,15,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, what.value, "V")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.value = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorp), "P")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colors), "S")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colors = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorv), "V")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorv = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 12, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('progressBar')
   elseif what.type == 'comboBox' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.elh)
-    tt(3,9,cr2,lc.colorbg)
-    tt(3,10,cr2,lc.colort)
-    tt(3,11,cr2,lc.colorabg)
-    tt(3,12,cr2,lc.colorat)
-    tt(3,13,cr2,lc.items)
-    tt(3,14,cr2,lc.visible)
-    tt(3,15,cr2,lc.delete)
-    tt(3,16,cr2,lc.up)
-    tt(3,17,cr2,lc.down)
-    local tmp = bn(17,16,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,17,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,13, 4,1, cr1, cr2, cr1, cr2, lc.show)
-    tmp.onTouch = function()
-      choosed = what.items[1]
-      local choose = win:addChild(GUI.filledWindow(1,1,45,12,cr1))
-      local function update()
-      local tmp1 = choose:addChild(GUI.comboBox(2,2,20,3,cr4,cr1,cr4,cr1))
-	    	if lc.close == 'Закрыть' or lc.close == 'Закрити' then
-	    			divide = 2
-	    	else
-  		  		divide = 1
-	    	end
-      local tmp = choose:addChild(GUI.input(2,6, 20,1, cr1, cr2, cr3, cr1, cr2,  choosed.name, "N")) 
-      tmp.onInputFinished = function()
-        choosed.name = tmp.text
-        OE.draw()
-      end
-      local tmp = choose:addChild(GUI.comboBox(2, 10, #lc.falsee/divide+2, 1,cr4, cr1, cr4, cr1))
-     if choosed.active == false then
-        tmp:addItem(lc.truee).onTouch = function()
-          choosed.active = false
-          OE.draw()
-        end
-        tmp:addItem(lc.falsee).onTouch = function()
-          choosed.active = true
-          OE.draw()
-        end
-      else
-        tmp:addItem(lc.falsee).onTouch = function()
-          choosed.active =true
-          OE.draw()
-        end
-       tmp:addItem(lc.truee).onTouch = function()
-          choosed.active = false
-          OE.draw()
-        end
-      end
-      local tmp = choose:addChild(GUI.button(30,8,#lc.close/divide,1,cr1,cr2,cr1,cr2,lc.close))
-      tmp.onTouch = function()
-       choose:remove()
-       OE.draw()
-      end
-      local tmp = choose:addChild(GUI.input(2,8, 20, 1,cr1, cr2, cr3, cr1, cr2,  choosed.path, "P")) 
-      tmp.onInputFinished = function()
-        choosed.path = tmp.text
-      end
-        tmp1:addItem(choosed.name).onTouch = function()
-         update()
-        end
-      for i = 1,#what.items do
-        if what.items[i] ~= choosed then
-        tmp1:addItem(what.items[i].name).onTouch = function()
-         choosed = what.items[i]
-         update()
-        end
-        end
-      end
-      local tmp = choose:addChild(GUI.button(30,2,#lc.add/divide,1,cr1,cr2,cr1,cr2,lc.add))
-      tmp.onTouch = function()
-        table.insert(what.items,{name='Item',path='',active=false})
-        choosed = what.items[#what.items]
-        update()
-      end
-      local tmp = choose:addChild(GUI.button(30,4,#lc.remove/divide,1,cr1,cr2,cr1,cr2,lc.remove))
-      tmp.onTouch = function()
-        for i = 1,#what.items do 
-        if what.items[i] == choosed then
-          table.remove(what.items,i)
-        end end
-        choosed = what.items[#what.items]
-        update()
-      end
-    end  update() end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorbg), "BG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorbg = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colort), "T")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colort = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorabg), "ABG")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorabg = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 12, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorat), "AT")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorat = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, what.elh, "ELH")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.elh = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x =tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = bn(17,15,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 14, #lc.falsee/divide+2, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('comboBox')
   elseif what.type == 'slider' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.colorp)
-    tt(3,9,cr2,lc.colorpp)
-    tt(3,10,cr2,lc.colorv)
-    tt(3,11,cr2,lc.minv)
-    tt(3,12,cr2,lc.maxv)
-    tt(3,13,cr2,lc.value)
-    tt(3,14,cr2,lc.path)
-    tt(3,15,cr2,lc.visible)
-    tt(3,16,cr2,lc.delete)
-    tt(3,17,cr2,lc.up)
-    tt(3,18,cr2,lc.down)
-    local tmp = bn(17,17,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,18,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 14, 20,1, cr1, cr2, cr3, cr1, cr2, what.path, "P")
-    tmp.onInputFinished = function()
-      what.path = tmp.text .. '.lua'
-      OE.draw()
-    end
-    local tmp = it(17, 11, 20,1, cr1, cr2, cr3, cr1, cr2, what.minv, "MINV")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.minv = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 12, 20,1, cr1, cr2, cr3, cr1, cr2, what.maxv, "MAXV")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.maxv = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 13, 20,1, cr1, cr2, cr3, cr1, cr2, what.value, "V")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.value = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorp), "P")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorpp), "PP")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorpp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 10, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorv), "V")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorv = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tmp.text
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = bn(17,16,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 15, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('slider')
   elseif what.type == 'progressIndicator' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.colorpa)
-    tt(3,8,cr2,lc.colorp)
-    tt(3,9,cr2,lc.colors)
-    tt(3,10,cr2,lc.visible)
-    tt(3,11,cr2,lc.delete)
-    tt(3,12,cr2,lc.up)
-    tt(3,13,cr2,lc.down)
-    local tmp = bn(17,12,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorpa), "PA")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorpa = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colorp), "P")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colorp = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.colors), "S")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.colors = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 10, #lc.falsee/divide+2+4, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('progressIndicator')
   elseif what.type == 'panel' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.width)
-    tt(3,8,cr2,lc.heigth)
-    tt(3,9,cr2,lc.color)
-    tt(3,10,cr2,lc.visible)
-    tt(3,11,cr2,lc.delete)
-    tt(3,12,cr2,lc.up)
-    tt(3,13,cr2,lc.down)
-    local tmp = it(17, 9, 20,1, cr1, cr2, cr3, cr1, cr2,  hts(what.color), "S")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.color = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 7, 20,1, cr1, cr2, cr3, cr1, cr2, what.width, "W")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.width = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 8, 20,1, cr1, cr2, cr3, cr1, cr2, what.height, "H")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.height = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = bn(17,12,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 10, 5, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end
+    drawParamsInParams('panel')
   elseif what.type == 'animation' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
+    drawParamsInParams('animation')
+    --[[tt(3,4,cr2,lc.name)
     tt(3,5,cr2,'X')
     tt(3,6,cr2,'Y')
     tt(3,7,cr2,lc.atlas)
@@ -1779,33 +381,15 @@ end
         what.visible = true
         OE.draw()
       end
-    end
+    end]]
   elseif what.type == 'file' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,lc.path)
-    tt(3,6,cr2,lc.delete)
-    local tmp = params:addChild(GUI.filesystemChooser(17, 5, 20, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, string.gsub(what.path,fs.extension(what.path) or '',''), "/"))
-    tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-    tmp.onSubmit = function(path)
-      what.path = path
-      OE.draw()
-      drawtree()
-      drawparams(what)
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-      OE.draw()
-    end
+    local tmp01 = drawParamsInParams('file')+1
     if fs.extension(what.path) == '.pic' then
-    		local tmp = params:addChild(GUI.container(3,8,36,13))
-    		tmp:addChild(GUI.panel(1,1,36,14,0x808080))
+    		local tmp = params:addChild(GUI.container(3,tmp01,36,23-tmp01))
+    		tmp:addChild(GUI.panel(1,1,36,23-tmp01,0x808080))
     		tmp:addChild(GUI.image(1,1,image.load(what.path)))
     end
-    local tmp = bn(17,6,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = function () for i = 1,#game.storage do if what == game.storage[i] then table.remove(game.storage,i) break end end OE.draw() drawtree() drawparams(game.storage[1]) end
   else
     tt(1,1,cr2,lc.WYC)
   end
@@ -1911,7 +495,7 @@ function objectmenu()
     local tmp = choose:addChild(GUI.filesystemChooser(23, 10, #lc.animation/divide+10, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.animation, "/"))
     tmp.onSubmit = function(path)
       choose:remove()
-      OE.Instance.new('animation','Animation Object',1,1,path,string.gsub(path,'atlas.pic','config.cfg'),true)
+      OE.Instance.new('animation','Animation Object',1,1,path,string.gsub(string.gsub(path,'Atlas.pic','Config.cfg'),'atlas.pic','config.cfg'),true)
       OE.draw()
       drawtree()
       drawparams(game.screen[#game.screen])
@@ -2026,32 +610,11 @@ function drawtree()
   end
 end
 local function adapting()
- 		  for i = 1,#game.screen do
- 		    if game.screen[i].type == 'animation' then
- 		    local tmpatlas = require'imageAtlas'.init(1,1)
- 		    game.screen[i].atlas.setImage = tmpatlas.setImage
- 		    game.screen[i].atlas.getImage = tmpatlas.getImage
-		 		  game.screen[i].tick = function(anim) 
-		    anim.stage = anim.stage + 1
-		    if anim.atlas:getImage(tostring(anim.stage)) then 
-		      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))
-		      return true, 'next'
-		    else 
-		      anim.stage = 1
-		      anim.raw.image = anim.atlas:getImage(tostring(anim.stage)) 
-		      return true, 'new'
-		    end
-		    end
-		    game.screen[i].checkNext = function(anim) 
-		    local tmp = anim.stage + 1
-		    if anim.atlas:getImage(tostring(tmp)) then
-		      return 'next'
-		    else
-		      return 'new'
-		    end
-		    end
+   for i = 1,#game.screen do
+ 	  if game.screen[i].type == 'animation' then
+ 	   OE.fixAtlas(game.screen[i])
     end
- 		  end
+ 	 end
   OE.draw()
 end
 local function save(path)
@@ -2080,7 +643,7 @@ local function save(path)
     fs.copy(game.scripts[i].path,'/Temporary/ProjectSave/'..fs.name(game.scripts[i].path))
   end
   compressor.pack(string.gsub(path,'.proj','')..'.proj',idk)
-				adapting()
+  adapting()
 end
 local function saveAsWindow ()
 		local tmp = GUI.addFilesystemDialog(wk,true,50, 30, lc.save,lc.cancel,lc.name,'/')
