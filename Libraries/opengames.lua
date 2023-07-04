@@ -23,7 +23,7 @@ function opengames.init(params)
 		opengames.gamepath = params.gamePath
 		opengames.game = params.game
 		opengames.cashe = {scripts={},images={}}
-		opengames.editor = {BG=params.bg,TITLE=params.title}
+		opengames.editor = {WK = params.wk, BG=params.bg,TITLE=params.title}
 		opengames.imageAtlas = params.imageAtlas
 		opengames.container = params.container
 		-- Init scripts module
@@ -44,6 +44,36 @@ function opengames.init(params)
 		    end
 		  end
 		end
+end
+local function localCopy(a)
+  return a
+end
+function opengames.fixAtlas(object)
+  if object.type == 'animation' then
+   local image = image.copy(object.atlas.atlas.image)
+   local config = table.copy(object.atlas.config)
+   object.atlas = require('ImageAtlas').init(1,1)
+   object.atlas.atlas.image = image
+   object.atlas.config = config
+		 object.tick = function(anim) 
+		   anim.stage = anim.stage + 1
+		   if anim.atlas:getImage(tostring(anim.stage)) then 
+		     anim.raw.image = anim.atlas:getImage(tostring(anim.stage))
+		     return true, 'next'
+		   else 
+		     anim.stage = 1
+		     anim.raw.image = anim.atlas:getImage(tostring(anim.stage)) 
+		     return true, 'new'
+		   end
+		 end
+		 object.checkNext = function(anim)
+		   if anim.atlas:getImage(tostring(anim.stage + 1)) then
+		     return 'next'
+		   else
+		     return 'new'
+		   end
+  end
+  end
 end
 function opengames.Instance.new(...)
    local args = {...}
@@ -67,28 +97,12 @@ function opengames.Instance.new(...)
   elseif args[1] == 'switch' then
     table.insert(game.screen,{onStateChanged = args[9], visible =args[11],state=args[10],type = 'switch',x=args[3],y=args[4],width=args[5],colorp=args[6], colors=args[7],colorpp=args[8],name = args[2]})
   elseif args[1] == 'button' then
-    table.insert(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, prevMode = 'roundedButton', switchMode = args[15] or false, mode = args[13] or 'default', type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
+    table.insert(game.screen,{visible = args[17],onTouch = args[12], height = args[6],width = args[5], animated = args[14] or true, disabled = args[16] or false, switchMode = args[15] or false, type = 'button',x= args[3],y=args[4],name = args[2],colorbg= args[8],mode=args[13],colorfg = args[9],colorbgp = args[10],colorfgp= args[11],text=args[7]})
   elseif args[1] == 'image' then
     table.insert(game.screen,{visible = args[6], type = 'image',x=args[3],y=args[4],image=args[5],name = args[2]})
   elseif args[1] == 'animation' then
-    table.insert(game.screen,{tick = function(anim) 
-    anim.stage = anim.stage + 1
-    if anim.atlas:getImage(tostring(anim.stage)) then 
-      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))
-      return true, 'next'
-    else 
-      anim.stage = 1
-      anim.raw.image = anim.atlas:getImage(tostring(anim.stage)) 
-      return true, 'new'
-    end
-    end, checkNext = function(anim) 
-    local tmp = anim.stage + 1
-    if anim.atlas:getImage(tostring(tmp)) then
-      return 'next'
-    else
-      return 'new'
-    end
-    end, visible = args[7],stage=0,type='animation',x=args[3],y=args[4],name=args[2],atlas=require('imageAtlas').init(args[5],args[6])})
+    table.insert(game.screen,{visible = args[7],stage=0,type='animation',x=args[3],y=args[4],name=args[2],atlas=require('imageAtlas').init(args[5],args[6])})
+    opengames.fixAtlas(game.screen[#game.screen])
   end
 end
 function opengames.Instance.remove(thing)
@@ -147,15 +161,14 @@ local function execute(path,...)
   if opengames.cashe.scripts[path] then
     system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
   else
-		  local gamepath = opengames.gamepath
-				if fs.exists(gamepath..'/Scripts/'..game.screen[tmp.index].onTouch) then
+		local gamepath = opengames.gamepath
+		if fs.exists(gamepath..'/Scripts/'..path) then
       opengames.cashe.scripts[path] = fs.read(gamepath..'/Scripts/'..path)
     else
-      system.error('/opengames.lua',154,'Hell nah man :skull:, required file does not exists.')
+      system.error('Hell naw man :skull:, required file does not exists.')
       return false
     end
-    tmp = nil
-    system.call(load(opengames.cashe.scripts[path]),index,opengames)
+    system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
   end
 end
 local function loadImage(path)
@@ -270,8 +283,7 @@ function opengames.draw()
 							end
 					end
 					if getS(i,'type') == 'button' then
-							if getS(i,'visible') ~= getB(i,'visible') then
-								function create(i)
+								local function create(i)
 											if getS(i,'mode') == 'default' then
 													tmp = screen:addChild(GUI.button(getS(i,'x'),getS(i,'y'),getS(i,'width'),getS(i,'height'),getS(i,'colorbg'),getS(i,'colorfg'),getS(i,'colorbgp'),getS(i,'colorfgp'),text))
 											elseif getS(i,'mode') == 'framedButton' then
@@ -291,6 +303,7 @@ function opengames.draw()
 													end
 											end
 								end
+							if getS(i,'visible') ~= getB(i,'visible') then
 									if getS(i,'visible') == true then
 											create(i)
 									else
@@ -771,6 +784,9 @@ function opengames.getLocalization(index)
     return opengames.game.localization
   end
 end
+function opengames.execute(object,...)
+  return execute(object,...)
+end
 function opengames.regScript(script,mode,interval,endtime,name)
   local callback
   if mode == 'execute' then
@@ -797,7 +813,7 @@ function opengames.playAnimation(object,speed)
   elseif type(object) == 'string' then
     object = find(opengames.game.screen,object)
   end
-  if not opengames.find(eventObject.scripts,object.name) then -- Works only if animation for thi object dosent started
+  if not opengames.find(eventObject.scripts,object.name) then -- Works only if animation for this object dosent started
 		  opengames.cashe.eventObject = {[object.name] = {prevStage = object.stage}}
 		  object.stage = 0
 		  opengames.regScript(function(...) 
@@ -813,7 +829,7 @@ function opengames.playAnimation(object,speed)
 		  end,'function',speed,-1,object.name)
   end
 end
-function getEventObject()
+function opengames.getEventObject()
   return eventObject
 end
 function opengames.find(where,what)
