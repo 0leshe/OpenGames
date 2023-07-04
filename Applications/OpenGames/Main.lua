@@ -65,11 +65,14 @@ function del()
 		drawparams(game.screen[1])
 end
 local function endOfParams(lastIndex, objectType)
-  tt(3,lastIndex+1,cr2,lc.delete)
+  local tmp01 = tt(3,lastIndex+1,cr2,lc.delete)
   local count = 1
   local tmp = bn(17,lastIndex+1,#lc.delete/divide,1,cr1,cr2,cr1,cr2,lc.delete)
   if objectType == 'script' then
    tmp.onTouch = function() for i = 1,#game.scripts do if what == game.scripts[i] then table.remove(game.scripts,i) break end end OE.draw() drawtree() drawparams(game.scripts[1]) end
+  elseif objectType == 'window' then
+    tmp:remove()
+    tmp01:remove()
   elseif objectType == 'file' then
     tmp.onTouch = function () for i = 1,#game.storage do if what == game.storage[i] then table.remove(game.storage,i) break end end OE.draw() drawtree() drawparams(game.storage[1]) end
   else
