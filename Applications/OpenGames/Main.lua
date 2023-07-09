@@ -1,15 +1,18 @@
-local GUI = require('gui')
-local paths = require('paths')
-local system = require('system')
-local event = require('event')
-local image = require('image')
-local fs = require('filesystem')
-local compressor = require('compressor')
+local GUI = require('GUI')
+local paths = require('Paths')
+local system = require('System')
+local event = require('Event')
+local image = require('Image')
+local uni = require('Unicode')
+local fs = require('Filesystem')
+local compressor = require('Compressor')
 local editorPath = string.gsub(system.getCurrentScript(),"/Main.lua","")
 local lc = system.getCurrentScriptLocalization()
 local userSettings = system.getUserSettings()
+local wk,win,menu = system.addWindow(GUI.filledWindow(0,0,160,50,0x8E8E8E))
 lc.x = 'X'
 lc.y = 'Y'
+local what
 local paramsPath = editorPath..'/OpenGames_Editor_Data/Edit_Params/'
 if not userSettings.opengames then
 		userSettings.opengames = {}
@@ -19,31 +22,39 @@ local OE = require('opengames')
 local gamepath = '/Autosave'
 local cr1, cr2,cr3,cr4 = userSettings.opengames.cr1 or 0x989898, userSettings.opengames.cr2 or 0x505050,userSettings.opengames.cr3 or 0x000000,userSettings.opengames.cr4 or 0x757575
 local treemode = 'screen'
-game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}
+local scenes = {{name='MainMenu',game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40, title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}}}
+local game = OE.find(scenes,'MainMenu').game
 		if require'imageAtlas' then
 		  imageAtlas = require'imageAtlas'
 		  isImageAtlas = true
 		end
-
-local wk,win,menu = system.addWindow(GUI.filledWindow(0,0,160,50,0x8E8E8E))
-local function changePosition(idk,fromposition,toposition)
-		if idk == true then
-  		game.screen[fromposition].raw:moveForward()
- 	else
-  		game.screen[fromposition].raw:moveBackward()
- 	end
+local function Wlen(...)
+  return uni.len(...)
 end
-local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.5.1'))
+local function whereFunction(where)
+  for i = 1,#where do
+    if type(where[i]) == 'function' then
+      print('yes yes yes')
+    elseif type(where[i]) == 'table' then
+      whereFunction(where)
+    end
+  end
+end
+local title = win:addChild(GUI.text(1,1,cr2,'Editor 1.6'))
 local screen = win:addChild(GUI.container(2,3,160,50))
-local BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color))
-local TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
 local params = win:addChild(GUI.filledWindow(102,24,40,23,cr1))
 local obj = win:addChild(GUI.filledWindow(102,2,36,20,cr1))
-OE.init({wk = wk, imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
+local BG = screen:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color))
+local TITLE = screen:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title)) 
+OE.init({allScenes = scenes, wk = wk, imageAtlas = isImageAtlas, editor = true,bg=BG,title=TITLE,container = screen,startScene = 'MainMenu'})
 game = OE.game
 OE.gamepath = gamepath
 
-function hts(...)
+local function changePosition(obj,fromposition,toposition)
+
+end
+
+function hts(...) -- HEX to string
   return ("0x%06X"):format(...)
 end
 function it(...)
@@ -60,14 +71,13 @@ function bx(...)
 end
 function del()
   OE.Instance.remove(what)
-		OE.draw() 
-		drawtree() 
-		drawparams(game.screen[1])
+	drawtree() 
+	drawparams(game.screen[1])
 end
 local function endOfParams(lastIndex, objectType)
-  local tmp01 = tt(3,lastIndex+1,cr2,lc.delete)
+  local tmp01 = tt(3,lastIndex,cr2,lc.delete)
   local count = 1
-  local tmp = bn(17,lastIndex+1,#lc.delete/divide,1,cr1,cr2,cr1,cr2,lc.delete)
+  local tmp = bn(17,lastIndex,#lc.delete/divide,1,cr1,cr2,cr1,cr2,lc.delete)
   if objectType == 'script' then
    tmp.onTouch = function() for i = 1,#game.scripts do if what == game.scripts[i] then table.remove(game.scripts,i) break end end OE.draw() drawtree() drawparams(game.scripts[1]) end
   elseif objectType == 'window' then
@@ -78,8 +88,8 @@ local function endOfParams(lastIndex, objectType)
   else
    count = 5
    tmp.onTouch = del
-  tt(3,lastIndex+2,cr2,lc.visible)
-  local tmp = bx(17, lastIndex+2, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2)
+  tt(3,lastIndex,cr2,lc.visible)
+  local tmp = bx(17, lastIndex, #lc.falsee/divide, 1, cr1, cr2, cr1, cr2)
   if what.visible == true then
     tmp:addItem(lc.truee).onTouch = function()
       what.visible = true
@@ -99,9 +109,9 @@ local function endOfParams(lastIndex, objectType)
       OE.draw()
     end
   end
-  tt(3,lastIndex+3,cr2,lc.up)
-  tt(3,lastIndex+4,cr2,lc.down)
-  local tmp = bn(17,lastIndex+3,#lc.up/divide,1,cr1,cr2,cr1,cr2,lc.up)
+  tt(3,lastIndex,cr2,lc.up)
+  tt(3,lastIndex,cr2,lc.down)
+  local tmp = bn(17,lastIndex,#lc.up/divide,1,cr1,cr2,cr1,cr2,lc.up)
   tmp.onTouch = function()
     for i = 1,#game.screen do
       if game.screen[i] == what then
@@ -112,11 +122,11 @@ local function endOfParams(lastIndex, objectType)
       end
     end
   end
-  local tmp = bn(17,lastIndex+4,#lc.down/divide,1,cr1,cr2,cr1,cr2,lc.down)
+  local tmp = bn(17,lastIndex,#lc.down/divide,1,cr1,cr2,cr1,cr2,lc.down)
   tmp.onTouch  = function()
     for i = 1,#game.screen do
       if game.screen[i] == what then
-        changePosition(false,i,i+1)
+        changePosition(false,i,i)
         OE.draw()
         drawtree()
         break
@@ -124,7 +134,7 @@ local function endOfParams(lastIndex, objectType)
     end
   end
   end
-  return count+ lastIndex+1
+  return count+lastIndex
 end
 function drawParamsInParams(objectType, useEnd)
   if not fs.exists(paramsPath..objectType..'.cfg') then
@@ -134,7 +144,7 @@ function drawParamsInParams(objectType, useEnd)
   local e
   local indexOfParam = 3
   if paramsTable == nil then
-    GUI.alert('What bro choose 🗣🗣')
+    GUI.alert('What bro choose ð£ð£')
     return
   end
   for i = 1, #paramsTable do
@@ -145,13 +155,13 @@ function drawParamsInParams(objectType, useEnd)
     else
       color = 0xFF0000
     end
-    params:addChild(GUI.panel(38,indexOfParam+i,1,1,color))
-    tt(3,indexOfParam+i,cr2,lc[paramsTable[i].param])
+    params:addChild(GUI.panel(38,indexOfParam,1,1,color))
+    tt(3,indexOfParam,cr2,lc[paramsTable[i].param])
    else
-   tt(3,indexOfParam+i,cr2,lc[paramsTable[i].param])
+   tt(3,indexOfParam,cr2,lc[paramsTable[i].param])
     end
    if paramsTable[i].type == 'input' then
-     local tmp = it(17, indexOfParam+i, 20, 1, cr1, cr2, cr3, cr1, cr2, what[paramsTable[i].param], string.upper(paramsTable[i].param))
+     local tmp = it(17, indexOfParam, 20, 1, cr1, cr2, cr3, cr1, cr2, what[paramsTable[i].param], string.upper(paramsTable[i].param))
      tmp.onInputFinished = function()
    		if tmp.text ~= '' then
    		 local value
@@ -165,14 +175,14 @@ function drawParamsInParams(objectType, useEnd)
     	end
      end
    elseif paramsTable[i].type == 'colorInput' or  paramsTable[i].type == 'inputColor' then
-     local tmp = params:addChild(GUI.colorSelector(17, indexOfParam+i, 20, 1, what[paramsTable[i].param], hts(what[paramsTable[i].param])))
+     local tmp = params:addChild(GUI.colorSelector(17, indexOfParam, 20, 1, what[paramsTable[i].param], hts(what[paramsTable[i].param])))
     tmp.onColorSelected = function()
       	what[paramsTable[i].param] = tmp.color
         tmp.text = hts(tmp.color)
       	OE.draw()
    		end
     elseif paramsTable[i].type == 'inputFile' then
-    local tmp = params:addChild(GUI.filesystemChooser(17, indexOfParam+i, 20, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.choose, '/'))
+    local tmp = params:addChild(GUI.filesystemChooser(17, indexOfParam, 20, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.choose, '/'))
     tmp.onSubmit = function(path)
       what[paramsTable[i].param] = path
       if paramsTable[i].callBack then
@@ -192,12 +202,12 @@ function drawParamsInParams(objectType, useEnd)
     if paramsTable[i].loc then
       towrite = lc[paramsTable[i].loc]
     end
-    local tmp = params:addChild(GUI.button(17,indexOfParam+i,#towrite/divide,1,cr1,cr2,cr2,cr1,towrite))
+    local tmp = params:addChild(GUI.button(17,indexOfParam,Wlen(towrite),1,cr1,cr2,cr2,cr1,towrite))
     tmp.onTouch = function(_,object)
       paramsTable[i].callBack(what,OE,lc,object)
     end
    elseif paramsTable[i].type == 'comboBox' then
-    local tmp = bx(17, indexOfParam+i, 15, 1, cr1, cr2, cr1, cr2)
+    local tmp = bx(17, indexOfParam, 15, 1, cr1, cr2, cr1, cr2)
     if paramsTable[i].vars then
       for e = 1,#paramsTable[i].vars do
 		     tmp:addItem(lc[paramsTable[i].vars[e]]).onTouch = function()
@@ -222,20 +232,24 @@ function drawParamsInParams(objectType, useEnd)
   end
   local toEnd
   if not useEnd then
-    toEnd =  endOfParams(e+indexOfParam, objectType)
+    toEnd =  endOfParams(e詷廄檶, objectType)
   else
-    toEnd = e + indexOfParam
+    toEnd = e  indexOfParam
   end
   return toEnd
 end
 function drawparams(whatt)
-  what = whatt
+  what = whatt -- Line 15, make what local
   params:removeChildren()
   if not what then 
-    params:addChild(GUI.panel(1,1,40,27,cr1))
-    return 
+    if treemode == 'screen' then
+      what = game.window
+    else
+      params:addChild(GUI.panel(1,1,40,25,cr1))
+      return false
+    end
   end
- 	if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+ 	if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
   		divide = 2
  	else
   		divide = 1
@@ -250,14 +264,14 @@ function drawparams(whatt)
     drawParamsInParams('button')
   elseif what.type == 'script' then
     tt(3,3,cr2,lc.type..': '..what.type)
-   local tmp =endOfParams(drawParamsInParams('script',true), 'script') + 1
+   local tmp =endOfParams(drawParamsInParams('script',true), 'script')  1
     local codeView = params:addChild(GUI.codeView(3, tmp, 36, 23 - tmp, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
 local counter = 1
 for line in fs.lines(what.path) do
 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
 	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 	table.insert(codeView.lines, line)
-	counter = counter + 1
+	counter = counter  1
 	if counter > codeView.height then
 		break
 	end
@@ -295,99 +309,9 @@ end
   elseif what.type == 'animation' then
     tt(3,3,cr2,lc.type..': '..what.type)
     drawParamsInParams('animation')
-    --[[tt(3,4,cr2,lc.name)
-    tt(3,5,cr2,'X')
-    tt(3,6,cr2,'Y')
-    tt(3,7,cr2,lc.atlas)
-    tt(3,8,cr2,lc.nextFrame)
-    tt(3,9,cr2,lc.playAnimation)
-    tt(3,10,cr2,lc.visible)
-    tt(3,11,cr2,lc.delete)
-    tt(3,12,cr2,lc.up)
-    tt(3,13,cr2,lc.down)
-    local tmp = params:addChild(GUI.filesystemChooser(17, 7, 20, 1,cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.change, "/"))
-    tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-    tmp.onSubmit = function(path)
-      what.stage = 0
-      what.atlas = require('imageAtlas').init(path,string.gsub(path,'atlas.pic','config.cfg'))
-      what:tick()
-    end
-    local tmp = bn(18,9,#lc.play/divide,1,cr1,cr2,cr1,cr2,lc.play)
-    tmp.onTouch = function(_,object)
-      OE.playAnimation(what,1)
-    end
-    local tmp = bn(18,8,#lc.frame/divide+2+#tostring(what.stage),1,cr1,cr2,cr1,cr2,lc.frame.. ': ' .. what.stage)
-    tmp.onTouch = function(_,object)
-      what:tick()
-      object.text = lc.frame .. ': ' .. what.stage
-      object.width = #lc.frame/divide+2+#tostring(what.stage)
-    end
-    local tmp = bn(17,12,6,1,cr1,cr2,cr1,cr2,lc.up)
-    tmp.onTouch = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(true,i,i-1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = bn(17,13,6,1,cr1,cr2,cr1,cr2,lc.down)
-    tmp.onTouch  = function()
-      for i = 1,#game.screen do
-        if game.screen[i] == what then
-          changePosition(false,i,i+1)
-          OE.draw()
-          drawtree()
-          break
-        end
-      end
-    end
-    local tmp = it(17, 4, 20,1, cr1, cr2, cr3, cr1, cr2, what.name, "N")
-    tmp.onInputFinished = function()
-      what.name = tmp.text
-      drawtree()
-    end
-    local tmp = it(17, 5, 5, 1, cr1, cr2, cr3, cr1, cr2, what.x, "X")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.x = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = it(17, 6, 5, 1, cr1, cr2, cr3, cr1, cr2, what.y, "Y")
-    tmp.onInputFinished = function()
-    		if tmp.text ~= '' then
-      what.y = tonumber(tmp.text)
-      OE.draw()
-      end
-    end
-    local tmp = bn(17,11,6,1,cr1,cr2,cr1,cr2,lc.delete)
-    tmp.onTouch = del
-    local tmp = bx(17, 10, 5, 1,cr1, cr2, cr1, cr2)
-    if what.visible == true then
-      tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-    else
-      tmp:addItem(lc.falsee).onTouch = function()
-        what.visible = false
-        OE.draw()
-      end
-     tmp:addItem(lc.truee).onTouch = function()
-        what.visible = true
-        OE.draw()
-      end
-    end]]
   elseif what.type == 'file' then
     tt(3,3,cr2,lc.type..': '..what.type)
-    local tmp01 = drawParamsInParams('file')+1
+    local tmp01 = drawParamsInParams('file')
     if fs.extension(what.path) == '.pic' then
     		local tmp = params:addChild(GUI.container(3,tmp01,36,23-tmp01))
     		tmp:addChild(GUI.panel(1,1,36,23-tmp01,0x808080))
@@ -398,7 +322,7 @@ end
   end
 end
 function objectmenu()
-		if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+		if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
 				divide = 2
 		else
 				divide = 1
@@ -409,7 +333,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(6,14,#lc.panel/divide,1,cr1,cr2,cr1,cr2,lc.panel))
   tmp.onTouch = function()
     choose:remove()
-    OE.Instance.new('panel',userSettings.opengames.panelName or 'Panel',userSettings.opengames.panelX or 1,userSettings.opengames.panelY or 1,userSettings.opengames.panelWidth or 10, userSettings.opengames.panelHeigth or 10,userSettings.opengames.color or cr1,true)
+    OE.Instance.new('panel',userSettings.opengames.panelName or 'Panel',userSettings.opengames.panelX or 1,userSettings.opengames.panelY or 1,userSettings.opengames.panelWidth or 10, userSettings.opengames.panelHeigth or 5,userSettings.opengames.color or cr1,true)
     OE.draw()
     drawtree()
     drawparams(game.screen[#game.screen])
@@ -441,7 +365,7 @@ function objectmenu()
   local tmp = choose:addChild(GUI.button(7,18,#lc.slider/divide,1,cr1,cr2,cr1,cr2,lc.slider))
   tmp.onTouch = function()
     choose:remove()
-    OE.Instance.new('slider',userSettings.opengames.sliderName or 'Slider',userSettings.opengames.sliderX or 1,userSettings.opengames.sliderY or 1,userSettings.opengames.sliderWidth or 20,userSettings.sliderColorP or cr1,userSettings.opengames.sliderColorPP or cr1,userSettings.opengames.sliderColorV or cr2,userSettings.opengames.sliderMinv or 1,userSettings.opengames.sliderMaxv or 100,userSettings.opengames.sliderValue or 50,'',true)
+    OE.Instance.new('slider',userSettings.opengames.sliderName or 'Slider',userSettings.opengames.sliderX or 1,userSettings.opengames.sliderY or 1,userSettings.opengames.sliderWidth or 20,userSettings.sliderColorP or cr1,userSettings.opengames.sliderColorPP or cr1,userSettings.opengames.sliderColorV or cr2,userSettings.opengames.sliderMinv or 0,userSettings.opengames.sliderMaxv or 100,userSettings.opengames.sliderValue or 50,'',true)
     OE.draw()
     drawtree()
     drawparams(game.screen[#game.screen])
@@ -495,7 +419,7 @@ function objectmenu()
     drawparams(game.screen[#game.screen])
   end
   if OE.imageAtlas then
-    local tmp = choose:addChild(GUI.filesystemChooser(23, 10, #lc.animation/divide+10, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.animation, "/"))
+    local tmp = choose:addChild(GUI.filesystemChooser(23, 10, #lc.animation/divide, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.animation, "/"))
     tmp.onSubmit = function(path)
       choose:remove()
       OE.Instance.new('animation','Animation Object',1,1,path,string.gsub(string.gsub(path,'Atlas.pic','Config.cfg'),'atlas.pic','config.cfg'),true)
@@ -508,8 +432,8 @@ function objectmenu()
     local tmp = choose:addChild(GUI.button(6,4,#lc.script/divide,1,cr1,cr2,cr1,cr2,lc.script))
     tmp.onTouch = function()
       choose:remove()
-      fs.write('/Temporary/'..tostring(#game.scripts+1)..'.lua',lc.DFtS)
-      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts+1)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
+      fs.write('/Temporary/'..tostring(#game.scripts)..'.lua',lc.DFtS)
+      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
     drawtree()
     drawparams(game.scripts[#game.scripts])
     end
@@ -522,8 +446,32 @@ function objectmenu()
     drawtree()
     drawparams(game.scripts[#game.scripts])
     end
+    local tmp = choose:addChild(GUI.button(6,8,#lc.scriptUI/divide,1,cr1,cr2,cr1,cr2,lc.scriptUI))
+    tmp.onTouch = function()
+      choose:remove()
+      fs.write('/Temporary/'..tostring(#game.scripts)..'.lua',lc.DFtS..'\n\nlocal args = {...}\nlocal indexOfObject = args[1]\nlocal OE = args[2]\nlocal object = OE.game.screen[indexOfObject]\n\n')
+      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
+    drawtree()
+    drawparams(game.scripts[#game.scripts])
+    end
+    local tmp = choose:addChild(GUI.button(6,10,#lc.scriptAutoload/divide,1,cr1,cr2,cr1,cr2,lc.scriptAutoload))
+    tmp.onTouch = function()
+      choose:remove()
+      fs.write('/Temporary/'..tostring(#game.scripts)..'.lua',lc.DFtS..'\n\nlocal args = {...}\nlocal OE = args[2]\n\n')
+      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
+    drawtree()
+    drawparams(game.scripts[#game.scripts])
+    end
+    local tmp = choose:addChild(GUI.button(6,12,#lc.scriptThread/divide,1,cr1,cr2,cr1,cr2,lc.scriptThread))
+    tmp.onTouch = function()
+      choose:remove()
+      fs.write('/Temporary/'..tostring(#game.scripts)..'.lua',lc.DFtS..'\n\nlocal args = {...}\nlocal events = args[1]\nlocal OE = args[2]\nlocal indexOfCalledScript= args[3]\nlocal objectThatCall = args[4]\nlocal scriptHandle = objectThatCall.scripts[indexOfCalledScript]\n\n')
+      table.insert(game.scripts,{autoload = userSettings.opengames.scriptAutoload or false,path = '/Temporary/'..tostring(#game.scripts)..'.lua',name = userSettings.opengames.scriptName or 'Script',type = 'script'})
+    drawtree()
+    drawparams(game.scripts[#game.scripts])
+    end
   elseif treemode == 'storage' then
-local tmp = choose:addChild(GUI.filesystemChooser(6, 4, #lc.path/divide+3, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.path, "/"))
+local tmp = choose:addChild(GUI.filesystemChooser(6, 4, #lc.path/divide, 1, cr1, cr2, cr1, cr2, nil, lc.open, lc.close, lc.path, "/"))
 tmp:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 tmp.onSubmit = function(path)
 choose:remove()
@@ -539,12 +487,12 @@ end
 function drawtree()
   obj:removeChildren()
   obj:addChild(GUI.panel(1,1,36,20,cr1))
-		if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+		if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
 				divide = 2
 		else
 				divide = 1
 		end
-		local elements = obj:addChild(GUI.container(4,4,33,17))
+    local visibleEl = obj:addChild(GUI.container(4,4,33,16))
 		local modesButtons = obj:addChild(GUI.container(1,1,36,20))
 		local bg = modesButtons:addChild(GUI.panel(1,1,36,3,cr1))
   local screenmode = modesButtons:addChild(GUI.button(3,2,#lc.screen/divide,1,cr1,cr2,cr1,cr2,lc.screen))
@@ -553,24 +501,29 @@ function drawtree()
     drawparams(game.screen[1])
     drawtree()
   end
-  local storagemode = modesButtons:addChild(GUI.button(5+#lc.screen/divide+#lc.scripts/divide,2,#lc.storage/divide,1,cr1,cr2,cr1,cr2,lc.storage))
+  local storagemode = modesButtons:addChild(GUI.button(5#lc.screen/divide#lc.scripts/divide,2,#lc.storage/divide,1,cr1,cr2,cr1,cr2,lc.storage))
   storagemode.onTouch = function()
     treemode = 'storage'
     drawparams(game.storage[1])
     drawtree()
   end
-  local scriptmode = modesButtons:addChild(GUI.button(4+#lc.screen/divide,2,#lc.scripts/divide,1,cr1,cr2,cr1,cr2,lc.scripts))
+  local scriptmode = modesButtons:addChild(GUI.button(4#lc.screen/divide,2,#lc.scripts/divide,1,cr1,cr2,cr1,cr2,lc.scripts))
   scriptmode.onTouch = function()
     treemode = 'script'
     drawparams(game.scripts[1])
     drawtree()
   end
   if treemode == 'screen' then
-    local tmp = modesButtons:addChild(GUI.button(3,3,#lc.screen/divide,1,cr1,cr2,cr1,cr2,lc.screen))
-    tmp.onTouch = function()
+		local elements = visibleEl:addChild(GUI.container(1,1,33,#game.screen))
+    if #game.screen > 15 then
+      obj:addChild(GUI.scrollBar(33, 2, 1, 18, 0x444444, 0x888888, 1, #game.screen, 1, 2, 1,true)).onTouch = function(_,obj)
+        elements.localY = -1*obj.value
+      end
+    end
+    modesButtons:addChild(GUI.button(3,3,#lc.screen/divide,1,cr1,cr2,cr1,cr2,lc.screen)).onTouch = function()
        drawparams(game.window)
     end
-    local addScreen = modesButtons:addChild(GUI.button(#lc.screen/divide+4,3,1,1,cr1,cr2,cr1,cr2,'+'))
+    local addScreen = modesButtons:addChild(GUI.button(#lc.screen/divide,3,1,1,cr1,cr2,cr1,cr2,''))
     addScreen.onTouch = function()
       objectmenu()
     end
@@ -580,11 +533,17 @@ function drawtree()
       tmp.onTouch = function()
         drawparams(game.screen[i])
       end
-      y = y + 1
+      y = y  1
     end
   elseif treemode == 'script' then
+		local elements = visibleEl:addChild(GUI.container(1,1,33,#game.scripts))
+    if #game.scripts > 15 then
+      obj:addChild(GUI.scrollBar(33, 2, 1, 18, 0x444444, 0x888888, 1, #game.scripts, 1,2, 1,true)).onTouch = function(_,obj)
+        elements.localY = -1*obj.value
+      end
+    end
    modesButtons:addChild(GUI.text(3,3,cr2,lc.scripts))
-   local addScreen = modesButtons:addChild(GUI.button(#lc.scripts/divide+4,3,1,1,cr1,cr2,cr1,cr2,'+'))
+   local addScreen = modesButtons:addChild(GUI.button(#lc.scripts/divide,3,1,1,cr1,cr2,cr1,cr2,''))
     addScreen.onTouch = function()
       objectmenu()
     end
@@ -594,11 +553,17 @@ function drawtree()
       tmp.onTouch = function()
         drawparams(game.scripts[i])
       end
-      y = y + 1
+      y = y  1
     end
   elseif treemode == 'storage' then
+		local elements = visibleEl:addChild(GUI.container(1,1,33,#game.storage))
+    if #game.storage > 15 then
+      obj:addChild(GUI.scrollBar(33, 2, 1, 18, 0x444444, 0x888888, 1, #game.storage, 1, 2, 1,true)).onTouch = function(_,obj)
+        elements.localY = -1*obj.value
+      end
+    end
    modesButtons:addChild(GUI.text(3,3,cr2,lc.storage))
-   local addScreen = modesButtons:addChild(GUI.button(#lc.storage/divide+4,3,1,1,cr1,cr2,cr1,cr2,'+'))
+   local addScreen = modesButtons:addChild(GUI.button(#lc.storage/divide,3,1,1,cr1,cr2,cr1,cr2,''))
     addScreen.onTouch = function()
       objectmenu()
     end
@@ -608,64 +573,76 @@ function drawtree()
       tmp.onTouch = function()
         drawparams(game.storage[i])
       end
-      y = y + 1
+      y = y  1
     end
   end
 end
 local function adapting()
+  for e= 1,#scenes do
+    local game = scenes[e].game
    for i = 1,#game.screen do
  	  if game.screen[i].type == 'animation' then
  	   OE.fixAtlas(game.screen[i])
     end
  	 end
-  OE.draw()
+  end
 end
 local function save(path)
 		gamepath = path
-		OE.gamepath = gamepath
-		if not path then return false end
-  fs.makeDirectory('/Temporary/ProjectSave')
-  local idk = {}
+	  OE.gamepath = gamepath
+    if not path then return false end
+     fs.makeDirectory('/Temporary/ProjectSave')
+     local idk = {}
+    for e = 1,#scenes do
+      local game = scenes[e].game
+      local idk1 ={}
+      for i = 1,#game.storage do
+      		table.insert(idk1,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
+        fs.copy(game.storage[i].path,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
+      end
+      for i = 1,#game.scripts do
+      		table.insert(idk1,'/Temporary/ProjectSave/' ..fs.name(game.scripts[i].path))
+        fs.copy(game.scripts[i].path,'/Temporary/ProjectSave/'..fs.name(game.scripts[i].path))
+      end
+      table.remove(OE.ABN)
 		  for i = 1,#game.screen do
-		  		game.screen[i].raw:remove()
-		  		game.screen[i].raw = nil
-		  		game.screen.buffer[i].raw = nil
-		  		game.screen.buffer[i].visible = false
+	  		  table.remove(game.screen[i].raw)
+          OE.cleanBuffers()
 		  		if game.screen[i].type == 'animation' then
-		  		  game.screen[i].tick = nil
-		  		  game.screen[i].checkNext = nil
+  		  		table.remove(game.screen[i].tick)
+  		  		table.remove(game.screen[i].atlas)
+  		  		table.remove(game.screen[i].checkNext)
 		  		end
 		  end
-    fs.writeTable('/Temporary/ProjectSave/Game.dat',game)
-  for i = 1,#game.storage do
-  		table.insert(idk,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
-    fs.copy(game.storage[i].path,'/Temporary/ProjectSave/' ..fs.name(game.storage[i].path))
-  end
-  for i = 1,#game.scripts do
-  		table.insert(idk,'/Temporary/ProjectSave/' ..fs.name(game.scripts[i].path))
-    fs.copy(game.scripts[i].path,'/Temporary/ProjectSave/'..fs.name(game.scripts[i].path))
-  end
+      table.insert(idk,string.gsub('/Temporary/ProjectSave/'..scenes[e].name,'.part','')..'.part')
+      compressor.pack(string.gsub('/Temporary/ProjectSave/'..scenes[e].name,'.part','')..'.part',idk1)
+    end
+  print(game.screen[1].raw)
+  --fs.writeTable('/Temporary/ProjectSave/Game.dat',scenes)
   compressor.pack(string.gsub(path,'.proj','')..'.proj',idk)
   adapting()
+  OE.draw()
 end
 local function saveAsWindow ()
 		local tmp = GUI.addFilesystemDialog(wk,true,50, 30, lc.save,lc.cancel,lc.name,'/')
 	 tmp:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 		tmp.onSubmit = function(path)
 		  if fs.exists(path..'.pkg') then 
-		  		local winerr = win:addChild(GUI.container(60,20,60,5))
-			  	if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+			  	if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
 				  		divide = 2
 			  	else
 				  		divide = 1
 			  	end
-		  		winerr:addChild(GUI.panel(1,1,#lc.YNEF,5,0xAAAAAA))
-		  		winerr:addChild(GUI.text(2,2,cr1,lc.YNEF))
-		  		winerr:addChild(GUI.button(2,4,2+#lc.save/divide,1,cr1,cr2,cr1,cr2,lc.save)).onTouch = function()
+		  		local winerr = win:addChild(GUI.filledWindow(60,20,Wlen(lc.YNEF),7,0xAAAAAA))
+          winerr.actionButtons.close.onTouch = function()
+            winerr:remove()
+          end
+		  		winerr:addChild(GUI.text(2,4,cr2,lc.YNEF))
+		  		winerr:addChild(GUI.button(2,6,2#lc.save/divide,1,cr1,cr2,cr1,cr2,lc.save)).onTouch = function()
 		 				 save(path)
 		 				 winerr:remove()
 		    end
-		  		winerr:addChild(GUI.button(4+#lc.YNEF/divide-#lc.cancel/divide-3,4,#lc.cancel/divide+3,1,cr1,cr2,cr1,cr2,lc.close)).onTouch = function()
+		  		winerr:addChild(GUI.button(4#lc.YNEF/divide-#lc.cancel/divide-3,6,#lc.cancel/divide,1,cr1,cr2,cr1,cr2,lc.close)).onTouch = function()
 		 				  winerr:remove()
 		 				  return 
 		 				  end
@@ -678,51 +655,37 @@ local function saveAsWindow ()
 	tmp:show()
 end
 local function new()
-		treemode = 'screen'
-		for i = 1,#game.screen do
-				game.screen[i].raw:remove()
-		end
-		game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,heigth= userSettings.opengames.windowHeight or 40,title = userSettings.opengames.windowTitle or 'Title',color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {},storage={}}
-		OE.draw()
+		OE.scenes = {{name='MainMenu',game = {scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40, title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}}}
+		OE.loadScene('MainMenu')
+    scenes = OE.scenes
+    game = OE.game
 		drawtree()
 		drawparams()
 end
 local function saveOrPass(onEnd,arg1)
-		 	if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+		 	if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
 		  		divide = 2
 		 	else
 		  		divide = 1
 		 	end
-				local winerr = win:addChild(GUI.container(60,20,#lc.saveToPath/divide+5+4+#lc.close/divide+3+4+#lc.save/divide+2+#lc.withoutSave/divide+4,5))
-				winerr:addChild(GUI.panel(1,1,#lc.saveToPath/divide+5+4+#lc.close/divide+3+4+#lc.save/divide+2+#lc.withoutSave/divide+4,5,0xAAAAAA))
-				winerr:addChild(GUI.text(2,2,cr1,lc.NF))
-				winerr:addChild(GUI.button(2,4,#lc.saveToPath/divide+5,1,cr1,cr2,cr1,cr2,lc.saveToPath)).onTouch = function()
+		    local winerr = win:addChild(GUI.filledWindow(60,20,Wlen(lc.saveToPath)흏隕(lc.withoutSave),7,0xAAAAAA))
+        winerr.actionButtons.close.onTouch = function()
+          winerr:remove()
+        end
+				winerr:addChild(GUI.text(2,4,cr2,lc.NF))
+				winerr:addChild(GUI.button(2,6,Wlen(lc.saveToPath),1,cr1,cr2,cr1,cr2,lc.saveToPath)).onTouch = function()
 					 saveAsWindow()
 					 winerr:remove()
 					 onEnd(arg1)
 		  end
-		  if gamepath ~= '' then
-						winerr:addChild(GUI.button(#lc.saveToPath/divide+5+4,4,2+#lc.save/divide,1,cr1,cr2,cr1,cr2,lc.save)).onTouch = function()
-							 save(gamepath)
-							 winerr:remove()
-							 onEnd(arg1)
-				  end
-		  end
-				winerr:addChild(GUI.button(#lc.saveToPath/divide+5+4+#lc.save/divide+4,4,#lc.close/divide+3,1,cr1,cr2,cr1,cr2,lc.close)).onTouch = function()
-				  winerr:remove()
-		  end
-				winerr:addChild(GUI.button(#lc.saveToPath/divide+5+4+#lc.close/divide+3+4+#lc.save/divide+2,4,#lc.withoutSave/divide+5,1,cr1,cr2,cr1,cr2,lc.withoutSave)).onTouch = function()
+				winerr:addChild(GUI.button(Wlen(lc.saveToPath),6,Wlen(lc.withoutSave),1,cr1,cr2,cr1,cr2,lc.withoutSave)).onTouch = function()
 				  winerr:remove()
 				  onEnd(arg1)
 		  end
 end
 local contextMenu = menu:addContextMenuItem(lc.file)
 contextMenu:addItem(lc.new,false).onTouch = function()
-		if game.screen[1] == nil and game.storage[1] == nil and game.scripts[1] == nil then
-				new()
-		else
-				saveOrPass(new)
-		end
+		saveOrPass(new)
 end
 contextMenu:addSeparator()
 contextMenu:addItem(lc.save,false).onTouch = saveAsWindow
@@ -731,9 +694,12 @@ local function open(path)
 		  compressor.unpack(path,'/Temporary/')
 		  path = '/Temporary/ProjectSave/'
 		  if not fs.exists(path..'/Game.dat') then GUI.alert(lc.UFP) return end
-		  game = fs.readTable(path..'/Game.dat')
+		  OE.scenes = fs.readTable(path..'/Game.dat')
+      scenes = OE.scenes
 		  idk = fs.list(path)
 		  for i = 1,#idk do
+        for j = 1,#scenes do
+        local game = scenes[j].game
 		    for e = 1, #game.storage do
 		      if game.storage[e].name == string.gsub(idk[i],fs.extension(idk[i]) or '','') then
 		        game.storage[e].path = path..idk[i]
@@ -745,15 +711,15 @@ local function open(path)
 		          game.scripts[e].path = path..idk[i]
 		        end
 		      end
-		    end
+		    end end
 		  end
 		  for i = 1,#game.screen.buffer do
 		  		game.screen.buffer[i].visible = false
  		  end
-    OE.init({imageAtlas = isImageAtlas, editor = true,game = game,bg=BG,title=TITLE,container = screen})
-				OE.gamepath = gamepath
-				adapting()
-		  OE.draw()
+      OE.loadScene(scenes[1].name)
+      game = OE.game
+			OE.gamepath = gamepath
+			adapting()
 		  drawparams(game.screen[1])
 		  drawtree()
 end
@@ -773,7 +739,7 @@ OE.regScript(function(...)
   local objectIndex = args[3]
   local object = args[4]
   if OE.gamepath ~= '' or not OE.gamepath then
-    OE.editorSave(OE.gamepath)
+    --OE.editorSave(OE.gamepath)
   end
 end,'function',userSettings.autoSaveTime or 30,-1,'Auto Save OpenGames Editor Service')
 contextMenu:addSeparator()
@@ -782,18 +748,29 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 		tmp:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 		local function export(path)
 		  local towrite = ''
-		  towrite = towrite .. 'local image = require("Image")\nlocal fs = require("filesystem")\nlocal event = require("event")\nlocal GUI = require("GUI")\nlocal system = require("System")\nlocal OE = require("opengames")\nlocal gamepath = string.gsub(system.getCurrentScript(),"/Main.lua","")\ngame = fs.readTable(gamepath.."/Game.dat")\ngame.localization=system.getCurrentScriptLocalization()\nlocal wk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.height,0x989898))\nwin:removeChildren()\nlocal BG = win:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color)) \nlocal TITLE = win:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))\n'
+		  towrite = towrite .. 'local image = require("Image")\nlocal fs = require("filesystem")\nlocal event = require("event")\nlocal GUI = require("GUI")\nlocal system = require("System")\nlocal OE = require("opengames")\nlocal gamepath = string.gsub(system.getCurrentScript(),"/Main.lua","")\n'
 		  fs.makeDirectory(path..'.app/Scripts')
 		  fs.makeDirectory(path..'.app/Assets')
 		  fs.makeDirectory(path..'.app/Localizations')
 		  fs.makeDirectory(path..'.app/Animation_data')
+      local chooseSceneWin = wk:addChild(GUI.filledWindow(60,20,#lc.CFSE/divide,9,0xAAAAAA))
+      chooseSceneWin:addChild(GUI.text(2,4,cr2,lc.CFSE))
+      local tmp = chooseSceneWin:addChild(GUI.comboBox(2,6,20,3,cr1,cr2,cr1,cr2))
+      local choosed
+      for i = 1,#scenes do
+        tmp:addItem(scenes[i].name).onTouch = function()
+          choosed = scenes[i].name
+		  towrite = towrite .. '\nlocal scenes = fs.readTable(gamepath.."/Game.dat")\nlocal game = OE.find(scenes,"'..choosed..'").game \nlocal wk,win,menu = system.addWindow(GUI.filledWindow(1,1,game.window.width,game.window.height,0x989898))\nwin:removeChildren()\nOE.init({win = win, gamePath = gamepath, win=win,startScene="'..choosed..'",editor = false,allScenes = scenes, container = win})\ngame.localization=system.getCurrentScriptLocalization()for i = 1,#game.screen do\n if game.screen[i].type == "animation" then\n game.screen[i].tick = function(anim)     anim.stage = anim.stage  1    if anim.atlas:getImage(tostring(anim.stage)) then       anim.raw.image = anim.atlas:getImage(tostring(anim.stage))      return true, "next"    else       anim.stage = 1      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))       return true, "new"    end    end    game.screen[i].checkNext = function(anim)     local tmp = anim.stage  1    if anim.atlas:getImage(tostring(tmp)) then      return "next"    else      return "new"    end		 end\n local path = gamepath.."/Animation_data/"..game.screen[i].name.."/Atlas.pic"\ngame.screen[i].atlas = require("imageAtlas").init(path,string.gsub(path,"Atlas.pic","Config.cfg"))\nend\nend\n for i = 1,#game.scripts do\n if game.scripts[i].autoload == true then\n OE.execute(game.scripts[i].name)\n end\n end'
+		  fs.write(path..'.app/Main.lua',towrite)
+      chooseSceneWin:remove()
+      for e = 1,#scenes do
+      local game = scenes[e].game
 		  for i = 1, #game.screen do
 		  		if game.screen[i].type == 'animation' then
 						  fs.makeDirectory(path..'.app/Animation_data/'..game.screen[i].name)
 						  game.screen[i].atlas:save(path..'.app/Animation_data/'..game.screen[i].name..'/')
 		  		end
 		  end
-		  towrite = towrite .. 'for i = 1,#game.screen do\n if game.screen[i].type == "animation" then\n game.screen[i].tick = function(anim)     anim.stage = anim.stage + 1    if anim.atlas:getImage(tostring(anim.stage)) then       anim.raw.image = anim.atlas:getImage(tostring(anim.stage))      return true, "next"    else       anim.stage = 1      anim.raw.image = anim.atlas:getImage(tostring(anim.stage))       return true, "new"    end    end    game.screen[i].checkNext = function(anim)     local tmp = anim.stage + 1    if anim.atlas:getImage(tostring(tmp)) then      return "next"    else      return "new"    end		 end local path = gamepath.."/Animation_data/"..game.screen[i].name.."/Atlas.pic"\ngame.screen[i].atlas = require("imageAtlas").init(path,string.gsub(path,"Atlas.pic","Config.cfg"))\nend\nend\n'
 		  for i = 1,#game.storage do
 		    if fs.extension(game.storage[i].path) == '.lang' then 
 		      fs.copy(game.storage[i].path,path..'.app/Localizations/'..fs.name(game.storage[i].path))
@@ -816,47 +793,46 @@ contextMenu:addItem(lc.export,false).onTouch = function()
 		  end
 		  idk = nil
 		  for e = 1,#game.storage do
-		    if game.storage[e].name == 'Icon' and fs.extension(game.storage[e].path) == '.pic' then
+		    if game.storage[e].name == '{AppIcon}' and fs.extension(game.storage[e].path) == '.pic' then
 		      idk = game.storage[e].path
 		    end
 		  end
-		  if idk == nil then idk = '/Icons/Application.pic' end
-		  local tmpgame = table.copy(game)
-		  for i = 1,#tmpgame.screen do
-		  		tmpgame.screen[i].raw = nil
-		  		tmpgame.screen.buffer[i].raw = nil
-		  		tmpgame.screen.buffer[i].visible = false
-		  		if tmpgame.screen[i].type == 'animtion' then
-		  				tmpgame.screen[i].atlas = {}
-		  				tmpgame.screen[i].tick = nil
-		  				tmpgame.screen[i].checkNext = nil
+		  for i = 1,#game.screen do
+          if game.screen[i].raw then
+  		  		table.remove(game.screen[i].raw)
+          end
+          OE.cleanBuffers()
+		  		if game.screen[i].type == 'animtion' then
+  		  		table.remove(game.screen[i].tick)
+  		  		table.remove(game.screen[i].atlas)
+  		  		table.remove(game.screen[i].checkNext)
 		  		end
 		  end
-		  tmpgame.window.buffer.abn = false
-		  towrite = towrite .. 'OE.init({gamePath = gamepath, editor = false,game = game, container = win})\nOE.draw()\n for i = 1,#game.scripts do\n if game.scripts[i].autoload == true then\n system.execute(game.scripts[i].path)\n end\n end\n'
-		  fs.write(path..'.app/Main.lua',towrite)
-		  fs.writeTable(path..'.app/Game.dat',tmpgame)
+		  game.window.buffer.abn = false
+      end
+		  fs.writeTable(path..'.app/Game.dat',scenes)
+		  if idk == nil then idk = '/Icons/Application.pic' end
 		  fs.copy(idk,path..'.app/Icon.pic')
-		  tmpgame = nil
+      adapting()
+        end
+      end
 		end
 		tmp.onSubmit = function(path)
 		  if fs.exists(path..'.app') then
-		  		local winerr = win:addChild(GUI.container(60,20,50,5))
-			  	if lc.close == 'Закрыть' or lc.close == 'Закрити' then
+		  		local winerr = win:addChild(GUI.filledWindow(60,20,Wlen(lc.EF),7,0xAAAAAA))
+          winerr.actionButtons.close.onTouch = function()
+            winerr:remove()
+          end
+			  	if lc.close == 'ÐÐ°ÐºÑÑÑÑ' or lc.close == 'ÐÐ°ÐºÑÐ¸ÑÐ¸' then
 			  			divide = 2
 				  else
 				  		divide = 1
 			  	end
-		  		winerr:addChild(GUI.panel(1,1,4+#lc.EF,5,0xAAAAAA))
-		  		winerr:addChild(GUI.text(2,2,cr1,lc.EF))
-		  		winerr:addChild(GUI.button(2,4,#lc.export/divide+2,1,cr1,cr2,cr1,cr2,lc.export)).onTouch = function()
+		  		winerr:addChild(GUI.text(2,4,cr2,lc.EF))
+		  		winerr:addChild(GUI.button(2,6,#lc.export/divide,1,cr1,cr2,cr1,cr2,lc.export)).onTouch = function()
 		 				 export(path)
 		 				 winerr:remove()
-		    end
-		  		winerr:addChild(GUI.button(4+#lc.EF/divide-#lc.cancel/divide-3,4,#lc.cancel/divide+3,1,cr1,cr2,cr1,cr2,lc.close)).onTouch = function()
-		 				  winerr:remove()
-		 				  return 
-		 				  end
+		      end
 		  else
 		    fs.makeDirectory(path..'.app')
 		  		export(path)
@@ -899,7 +875,7 @@ end
 local function chooseItem(localization,param,tmp)
 		tmp:addItem(localization).onTouch = function()
 			  local container = GUI.addBackgroundContainer(wk, true, true)
-    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide+2+4, 1, cr1, cr2, cr1, cr2))
+    local tmp = container.layout:addChild(GUI.comboBox(1, 1, #lc.falsee/divide, 1, cr1, cr2, cr1, cr2))
     if userSettings.opengames[param] == nil then userSettings.opengames[param] = true end
     if userSettings.opengames[param] == true then
       tmp:addItem(lc.truee).onTouch = function()
@@ -934,6 +910,7 @@ local function sampleParams()
 		numberItem(lc.windowWidth,'windowWidth',tmp)
 		numberItem(lc.windowHeight,'windowHeight',tmp)
 		chooseItem(lc.windowABN,'windowABN',tmp)
+		colorItem(lc.autoSave,'autoSaveTime',tmp)
 		tmp:addItem(lc.reset).onTouch = function()
 				userSettings.opengames = nil
 				system.saveUserSettings()
@@ -1137,6 +1114,58 @@ local function sampleParams()
 		chooseItem(lc.autoload,'scriptAutoload',tmp)
 		local tmp = usualParams:addSubMenuItem(lc.storage)
 		standartItem(lc.name,'storageName',tmp)
+end
+local scenesMenu = menu:addContextMenuItem(lc.scenes)
+scenesMenu:addItem(lc.newScene).onTouch = function()
+  table.insert(scenes,{name='Scene #'..tostring(#scenes),game={scripts = {},window = {abn = userSettings.opengames.windowABN or true,type = 'window',width=userSettings.opengames.windowWidth or 80,height= userSettings.opengames.windowHeight or 40, title = userSettings.opengames.windowTitle or 'Title',buffer={},color = userSettings.opengames.windowColor or cr4,titleColor = userSettings.opengames.windowTitleColor or cr2},screen = {buffer = {}},storage={buffer={}}}})
+end
+scenesMenu:addItem(lc.removeScene).onTouch = function()
+	local container = GUI.addBackgroundContainer(wk, true, true)
+  local tmp = container.layout:addChild(GUI.comboBox(1, 1, 30, 3, cr1, cr2, cr1, cr2))
+  local show
+  for i = 1,#scenes do
+    tmp:addItem(scenes[i].name).onTouch = function(_,object)
+      if #scenes > 1 then
+        table.remove(scenes,i)
+        object:remove()
+      else
+        if not show then
+          container.layout:addChild(GUI.text(1,2,cr1,lc.MbOS))
+        end
+      end
+    end
+  end
+end
+scenesMenu:addSeparator()
+scenesMenu:addItem(lc.loadScene).onTouch = function()
+	local container = GUI.addBackgroundContainer(wk, true, true)
+  local tmp = container.layout:addChild(GUI.comboBox(1, 1, 30, 3, cr1, cr2, cr1, cr2))
+  for i = 1,#scenes do
+    tmp:addItem(scenes[i].name).onTouch = function()
+      OE.loadScene(scenes[i].name)
+      game = OE.game
+      drawtree()
+      drawparams(game.screen[1])
+    end
+  end
+end
+scenesMenu:addItem(lc.edit).onTouch = function()
+	local container = GUI.addBackgroundContainer(wk, true, true)
+  local tmp = container.layout:addChild(GUI.comboBox(1, 1, 30, 3, cr1, cr2, cr1, cr2))
+  local tmp01 =container.layout:addChild(GUI.input(1,2,30,3,cr1,cr2,0x0,cr2,cr1,lc.sceneName,lc.SMN))
+  for i = 1,#scenes do
+    tmp:addItem(scenes[i].name).onTouch = function(_,object)
+      tmp01.text = scenes[i].name
+      tmp01.choosedItem = object
+      tmp01.choosed = i
+    end
+  end
+  tmp01.onInputFinished = function(_,object)
+    if scenes[object.choosed] then
+      scenes[object.choosed].name = tmp01.text
+      object.choosedItem.text = tmp01.text
+    end
+  end
 end
 sampleParams()
 OE.draw()
