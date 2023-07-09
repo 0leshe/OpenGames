@@ -1,3 +1,2 @@
 # OpenGames
-OpenGames is project for minecraft mod OpenComputers. In OpenGames you can create you own game or just application! Have fun with it!
-Wiki: https://github.com/0leshe/OpenGames/wiki
+This is In Dev branch. You can see what are we making. I make this branch bc of "Point of no return". When you f-up all code i can load this.
