@@ -9,8 +9,8 @@ local eventObject
 function opengames.init(params)
 		opengames.isEditor = params.editor or false
 		opengames.useImages = params.useImages or true
-		if not params.game then
-				system.error('Init MUST contain game table.')
+		if not params.allScenes then
+				system.error('Init MUST contain scenes.')
 		end
 		if not params.container then
 				system.error('Init MUST contain window or container.')
@@ -20,12 +20,17 @@ function opengames.init(params)
 						system.error('Init MUST contain game path.')
 				end
 		end
+    -- Init params
 		opengames.gamepath = params.gamePath
-		opengames.game = params.game
+    opengames.win = params.container
+    opengames.scenes = params.allScenes
 		opengames.cashe = {scripts={},images={}}
-		opengames.editor = {WK = params.wk, BG=params.bg,TITLE=params.title}
+		opengames.editor = {WK = params.wk}
+    opengames.BG=params.bg
+    opengames.TITLE=params.title
 		opengames.imageAtlas = params.imageAtlas
 		opengames.container = params.container
+    opengames.loadScene(params.startScene)
 		-- Init scripts module
 		eventObject = opengames.container:addChild(GUI.object(1,1,1,1))
 		eventObject.scripts = {} -- [n] = {time_started, prev_call, time_end, interval, callback}
@@ -44,9 +49,6 @@ function opengames.init(params)
 		    end
 		  end
 		end
-end
-local function localCopy(a)
-  return a
 end
 function opengames.fixAtlas(object)
   if object.type == 'animation' then
@@ -72,7 +74,30 @@ function opengames.fixAtlas(object)
 		   else
 		     return 'new'
 		   end
+     end
+    object.loadAnimation = function(aninm,atlas,config)
+      anim.atlas = atlas
+      anim.config = config
+    end
+  else
+    return false
   end
+end
+function opengames.breakAtlas(object)
+  if object.type == 'animation' then
+    object.loadAnimation = nil
+    object.checkNext = nil
+    object.tick = nil
+    local function removeFunctions(t)
+      for i = 1,#t do
+        if type(t[i]) == 'function' then
+          t[i] = nil
+        end
+      end
+    end
+    removeFunctions(object.atlas)
+  else
+    return false
   end
 end
 function opengames.Instance.new(...)
@@ -106,29 +131,26 @@ function opengames.Instance.new(...)
   end
 end
 function opengames.Instance.remove(thing)
-		if type(thing) == 'number' then
-		  if not opengames.game.screen[thing] then return false end
-		  opengames.game.screen[thing].raw:remove()
-		  opengames.game.screen[thing] = nil
-		  opengames.game.screen.buffer[thing] = nil
-		elseif type(thing) == 'string' then
-				_,thing = opengames.find(thing)
-		  if not opengames.game.screen[thing] then return false end
-		  opengames.game.screen[thing].raw:remove()
-		  opengames.game.screen[thing] = nil
-		  opengames.game.screen.buffer[thing] = nil
-		elseif type(thing) == 'table' then
-		  if not thing then return false end
-		  thing.raw:remove()
-		  thing = opengames.find(opengames.game.screen,thing)
-		  opengames.game.screen[thing] = nil
-		  opengames.game.screen.buffer[thing] = nil
-		end
+	if type(thing) == 'number' then
+	  if not opengames.game.screen[thing] then return false end
+	elseif type(thing) == 'string' then
+			_,thing = opengames.find(opengames.game.screen,thing)
+	  if not opengames.game.screen[thing] then return false end
+	elseif type(thing) == 'table' then
+	  thing = opengames.find(opengames.game.screen,thing)
+	  if not opengames.game.screen[thing] then return false end
+	end
+  opengames.game.screen[thing].visible = false
+  opengames.draw()
+  table.remove(opengames.game.screen,thing)
+  opengames.cleanBuffers()
 end
-function table.copy (originalTable)
+function table.copy(originalTable) -- Idk how to do it normal
  local copyTable = {}
   for k,v in pairs(originalTable) do
-    copyTable[k] = v
+    if k ~= 'buffer' then
+      copyTable[k] = v
+    end
   end
  return copyTable
 end
@@ -158,27 +180,20 @@ local function getBW(name)
 		return game.window.buffer[name]
 end
 local function execute(path,...)
+	local gamepath = opengames.gamepath
   if opengames.cashe.scripts[path] then
-    system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
+    return system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
   else
-		local gamepath = opengames.gamepath
-		if fs.exists(gamepath..'/Scripts/'..path) then
-      opengames.cashe.scripts[path] = fs.read(gamepath..'/Scripts/'..path)
+		if fs.exists(gamepath..'/Scripts/'..path..'.lua') then
+      opengames.cashe.scripts[path] = fs.read(gamepath..'/Scripts/'..path..'.lua')
     else
-      system.error('Hell naw man :skull:, required file does not exists.')
-      return false
+      return false, 'Required file does not exists.'
     end
-    system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
+    return system.call(load(opengames.cashe.scripts[path]), ... ,opengames)
   end
 end
 local function loadImage(path)
-  if opengames.cashe.images[path] then
-    if opengames.useImages == true then
-      return opengames.cashe.images[path]
-    else
-      return image.load('/Icons/Script.pic')
-    end
-  else
+  if not opengames.cashe.images[path] then
     local game = opengames.game
     idk = nil
     for e = 1,#game.storage do
@@ -188,19 +203,28 @@ local function loadImage(path)
     end
     if idk == nil then return image.load('/Icons/Script.pic') end
     opengames.cashe.images[path] = image.load(idk)
-    if opengames.useImages == true then
-      return opengames.cashe.images[path]
-    else
-      return image.load('/Icons/Script.pic')
-    end
+  end
+  if opengames.useImages == true then
+    return opengames.cashe.images[path]
+  else
+    return image.load('/Icons/Script.pic')
   end
 end
-function opengames.draw()
+function opengames.draw(fromZero)
 		local game = opengames.game
 		local screen = opengames.container
+    local ABN = opengames.ABN
 		local gamepath = opengames.gamepath
-		local BG = BG or opengames.editor.BG
-		local TITLE = TITLE or opengames.editor.TITLE
+    if fromZero then
+      if opengames.win then
+        opengames.win:removeChildren()
+      end
+     opengames.ABN = false
+     opengames.BG = opengames.container:addChild(GUI.panel(1,1,game.window.width,game.window.height,game.window.color))
+     opengames.TITLE = opengames.container:addChild(GUI.text(math.floor(game.window.width/2-#game.window.title/2),1,game.window.titleColor,game.window.title))
+    end
+		local BG = opengames.BG
+		local TITLE = opengames.TITLE
 		if game.window.width ~= getBW('width') then
 				BG.width = game.window.width
 				TITLE.localX = math.floor(game.window.width/2-string.len(game.window.title)/1.5/2)
@@ -220,23 +244,33 @@ function opengames.draw()
 		end
 		if game.window.abn ~= getBW('abn') then
 				if game.window.abn == true then
-						ABN = screen:addChild(GUI.actionButtons(2,1,false))
-						ABN.close.onTouch = function()
-								screen:remove()
-						end
-						ABN.minimize.onTouch = function()
-								screen:minimize()
-						end
+            if not opengames.ABN then
+  						opengames.ABN = opengames.container:addChild(GUI.actionButtons(2,2,false))
+              if not opengames.isEditor then
+    						opengames.ABN.close.onTouch = function()
+    								opengames.win:remove()
+    						end
+    						opengames.ABN.minimize.onTouch = function()
+    								opengames.win:minimize()
+    						end
+              end
+            end
 				else
-						ABN:remove()
+						opengames.ABN:remove()
+            opengames.ABN = false
 				end
 		end
 		if not game.localization then
 				game.localization = {}
 		end
+    print(game.screen)
+    print(#screen.children)
 		for i = 1, #game.screen do
 					if game.screen.buffer[i] == nil then
 							game.screen.buffer[i] = {visible = false}
+					end
+					if game.storage.buffer[i] == nil then
+							game.storage.buffer[i] = {}
 					end
 					if game.screen[i].text then
 							local tbl = {}
@@ -266,7 +300,9 @@ function opengames.draw()
 											local tmp = screen:addChild(GUI.text(getS(i,'x'),getS(i,'y'),getS(i,'color'),text))
 											game.screen[i].raw = tmp
 									else
-											game.screen[i].raw:remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'text') ~= getB(i,'text') then
@@ -307,7 +343,9 @@ function opengames.draw()
 									if getS(i,'visible') == true then
 											create(i)
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'mode') ~= getB(i,'mode') then
@@ -356,19 +394,21 @@ function opengames.draw()
 									if getS(i,'visible') == true then
 											game.screen[i].raw = screen:addChild(GUI.image(getS(i,'x'),getS(i,'y'),loadImage(getS(i,'image'))))
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
-		  				getR(i).localX = getS(i,'x')
+		  			  	getR(i).localX = getS(i,'x')
 							end
 							if getS(i,'y') ~= getB(i,'y') then
-		  				getR(i).localY = getS(i,'y')
+		  			  	getR(i).localY = getS(i,'y')
 							end
 							if getS(i,'image') ~= getB(i,'image') then
-	        getR(i).image = loadImage(getS(i,'image'))
-				  	end
-				  	idk = nil
+	             getR(i).image = loadImage(getS(i,'image'))
+				  	  end
+				  	  local idk = nil
        for e = 1,#game.storage do
          if game.storage[e].name == getS(i,'image') then
            if game.storage[e].path == game.storage.buffer[e].path then
@@ -387,7 +427,9 @@ function opengames.draw()
 											game.screen[i].raw = screen:addChild(GUI.image(getS(i,'x'),getS(i,'y'),image.load('/Icons/HDD.pic')))
 									  game.screen[i]:tick()
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -417,7 +459,9 @@ function opengames.draw()
 													end
 											end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'text') ~= getB(i,'text') then
@@ -471,7 +515,9 @@ function opengames.draw()
 													end
 											end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -502,7 +548,9 @@ function opengames.draw()
 											local tmp = screen:addChild(GUI.panel(getS(i,'x'),getS(i,'y'),getS(i,'width'),getS(i,'height'),getS(i,'color')))
 											game.screen[i].raw = tmp
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -536,7 +584,9 @@ function opengames.draw()
 											  end
 											end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -574,17 +624,14 @@ function opengames.draw()
 											  end
 											end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
 		  				getR(i).localX = getS(i,'x')
 							end
-		  		if getS(i,'path') ~= getB(i,'path') then
-		  				if opengames.isEditor == false then
-										opengames[i].script = fs.read(gamepath..'/Scripts/'..game.screen[i].path,tmp.index)
-								end
-						end
 							if getS(i,'y') ~= getB(i,'y') then
 		  				getR(i).localY = getS(i,'y')
 							end
@@ -625,7 +672,9 @@ function opengames.draw()
 													end
 											end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -653,7 +702,9 @@ function opengames.draw()
 											local tmp = screen:addChild(GUI.progressBar(getS(i,'x'),getS(i,'y'),getS(i,'width'),getS(i,'colorp'),getS(i,'colors'),getS(i,'colorv'),getS(i,'value'),true))
 											game.screen[i].raw = tmp
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -688,7 +739,9 @@ function opengames.draw()
 						       tmp:addItem(getS(i,'items')[e].name,getS(i,'items')[e].active)
 						     end
 									else
-											getR(i):remove()
+                      if getR(i) then
+											  getR(i):remove()
+                      end
 									end
 							end
 							if getS(i,'x') ~= getB(i,'x') then
@@ -728,12 +781,8 @@ function opengames.draw()
 							end
 					end
 		end
-		game.screen.buffer = {}
-		game.window.buffer = table.copy(game.window)
-		game.storage.buffer = table.copy(game.storage)
-		for i = 1, #game.screen do
-				game.screen.buffer[i] = table.copy(game.screen[i])
-		end
+    opengames.updateBuffers()
+    print(#screen.children)
 end
 function opengames.getObject(index)
 		if type(index) == 'number' then
@@ -807,6 +856,85 @@ function opengames.unregScript(name)
   result,_ = opengames.find(eventObject.scripts,name)
   result.time_end = 1
 end
+function opengames.cleanBuffers()
+  local game = opengames.game
+  game.screen.buffer = {}
+  game.scripts.buffer = {}
+  game.storage.buffer = {}
+  game.window.buffer = {}
+end
+function opengames.updateBuffers()
+  local game = opengames.game
+	game.screen.buffer = table.copy(game.screen)
+	game.window.buffer = table.copy(game.window)
+	game.storage.buffer = table.copy(game.storage)
+end
+function opengames.cleanScreenBufferObj(i)
+  table.remove(opengames.game.screen.buffer,i)
+end
+function opengames.cleanStorageBufferObj(i)
+  table.remove(opengames.game.storage.buffer,i)
+end
+function opengames.cleanScreenBufferObj(i)
+  table.remove(opengames.game.screen.buffer,i)
+end
+function opengames.cleanScreenBuffer()
+  opengames.game.screen.buffer = {}
+end
+function opengames.cleanStorageBuffer()
+  opengames.game.storage.buffer = {}
+end
+function opengames.cleanScriptsBuffer()
+  opengames.game.scripts.buffer = {}
+end
+function opengames.cleanWindowBuffer()
+  opengames.game.window.buffer = {}
+end
+function opengames.loadScene(sceneName)
+  if opengames.find(opengames.scenes,sceneName) then
+    if opengames.game then
+      opengames.cleanBuffers()
+      if opengames.game == opengames.find(opengames.scenes,sceneName).game then
+        return false, 'Alr loaded'
+      end
+      opengames.clearCashe()
+    end
+    opengames.game = opengames.find(opengames.scenes,sceneName).game
+    if not opengames.isEditor then
+      for i = 1,#game.scripts do
+        if game.scripts[i].autoload then
+          execute(game.scripts[i].name)
+        end
+      end
+    end
+    opengames.cleanBuffers()
+    opengames.draw(true)
+    opengames.cleanBuffers()
+    opengames.draw()
+  else
+    return false, 'Scene does not exists xdd'
+  end
+  return true
+end
+function opengames.colide(obj1,obj2)
+  if not obj1 and obj2 then
+    return false
+  end
+  if obj1.raw:isPointInside(obj2.raw.x,obj2.raw.y) then
+    return true
+  else
+    return false
+  end
+end
+function opengames.colideWW(object) -- colide With Who
+  local returnTable = {}
+  for i = 1,#opengames.game.screen do
+    if opengames.colide(object,opengames.game.screen[i]) then
+      table.insert(returnTable,opengames.game.screen[i])
+    end
+  end
+  return returnTable
+end
 function opengames.playAnimation(object,speed)
   if type(object) == 'number' then
     object = opengames.game.screen[object]
@@ -840,6 +968,9 @@ function opengames.find(where,what)
 				  return i
 				end
 		end
+    if where[what] then
+      return where[what]
+    end
 		return false
 end
 
